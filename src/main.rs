@@ -5,6 +5,7 @@ use bevy_ecs::bundle::Bundle;
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::With;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res, ResMut};
+use tracing::info;
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
@@ -45,10 +46,10 @@ struct Entities {
 }
 
 fn main() {
+    tracing_subscriber::fmt::init();
+
     App::build()
         .insert_resource(DoryenPluginSettings {
-            // here are all the available options.
-            // better practice is to use default values (see other examples)
             app_options: AppOptions {
                 console_width: CONSOLE_WIDTH,
                 console_height: CONSOLE_HEIGHT,
@@ -94,6 +95,8 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
         .id();
 
     commands.insert_resource(Entities { player, mouse });
+
+    info!("Finished initialization");
 }
 
 fn input(
