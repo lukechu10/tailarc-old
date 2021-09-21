@@ -1271,6 +1271,7 @@ dependencies = [
  "bevy_doryen",
  "bevy_ecs",
  "doryen-rs",
+ "rand 0.8.4",
  "tracing",
  "tracing-subscriber",
 ]

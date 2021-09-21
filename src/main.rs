@@ -1,9 +1,12 @@
+mod render;
+mod tile;
+
 use bevy_app::App;
-use bevy_doryen::doryen::{AppOptions, TextAlign};
+use bevy_doryen::doryen::AppOptions;
 use bevy_doryen::{DoryenPlugin, DoryenPluginSettings, Input, RenderSystemExtensions, RootConsole};
 use bevy_ecs::bundle::Bundle;
 use bevy_ecs::entity::Entity;
-use bevy_ecs::prelude::With;
+use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res, ResMut};
 use tracing::info;
 
@@ -68,7 +71,7 @@ fn main() {
         .add_plugin(DoryenPlugin)
         .add_startup_system(init.system())
         .add_system(input.system())
-        .add_doryen_render_system(render.system())
+        .add_doryen_render_system(render::render.system())
         .run();
 }
 
@@ -95,6 +98,9 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
         .id();
 
     commands.insert_resource(Entities { player, mouse });
+
+    // Tile map resource.
+    commands.insert_resource(tile::TileMap::new());
 
     info!("Finished initialization");
 }
@@ -127,75 +133,4 @@ fn input(
     let new_mouse_position = input.mouse_pos();
     mouse_position.0.x = new_mouse_position.0 as i32;
     mouse_position.0.y = new_mouse_position.1 as i32;
-}
-
-fn render(
-    entities: Res<Entities>,
-    mut root_console: ResMut<RootConsole>,
-    player_query: Query<(&PlayerPosition, With<Player>)>,
-    mouse_query: Query<(&MousePosition, With<Mouse>)>,
-) {
-    root_console.rectangle(
-        0,
-        0,
-        CONSOLE_WIDTH,
-        CONSOLE_HEIGHT,
-        Some((128, 128, 128, 255)),
-        Some((0, 0, 0, 255)),
-        Some('.' as u16),
-    );
-    root_console.area(
-        10,
-        10,
-        5,
-        5,
-        Some((255, 64, 64, 255)),
-        Some((128, 32, 32, 255)),
-        Some('&' as u16),
-    );
-
-    let player_position = player_query
-        .get_component::<PlayerPosition>(entities.player)
-        .unwrap();
-
-    root_console.ascii(player_position.0.x, player_position.0.y, '@' as u16);
-    root_console.fore(
-        player_position.0.x,
-        player_position.0.y,
-        (255, 255, 255, 255),
-    );
-    root_console.print_color(
-        (CONSOLE_WIDTH / 2) as i32,
-        (CONSOLE_HEIGHT - 1) as i32,
-        "#[red]arrows#[white] : move",
-        TextAlign::Center,
-        None,
-    );
-
-    let mouse_position = mouse_query
-        .get_component::<MousePosition>(entities.mouse)
-        .unwrap();
-
-    root_console.print_color(
-        (CONSOLE_WIDTH / 2) as i32,
-        (CONSOLE_HEIGHT - 3) as i32,
-        &format!(
-            "#[white]Mouse coordinates: #[red]{}, {}",
-            mouse_position.0.x, mouse_position.0.y
-        ),
-        TextAlign::Center,
-        None,
-    );
-    root_console.print_color(
-        5,
-        5,
-        "#[blue]This blue text contains a #[red]red#[] word",
-        TextAlign::Left,
-        None,
-    );
-    root_console.back(
-        mouse_position.0.x as i32,
-        mouse_position.0.y as i32,
-        (255, 255, 255, 255),
-    );
 }
