@@ -5,7 +5,6 @@ use bevy_app::App;
 use bevy_doryen::doryen::AppOptions;
 use bevy_doryen::{DoryenPlugin, DoryenPluginSettings, Input, RenderSystemExtensions, RootConsole};
 use bevy_ecs::bundle::Bundle;
-use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res, ResMut};
 use tracing::info;
@@ -43,11 +42,6 @@ struct MouseBundle {
     position: MousePosition,
 }
 
-struct Entities {
-    player: Entity,
-    mouse: Entity,
-}
-
 fn main() {
     tracing_subscriber::fmt::init();
 
@@ -80,24 +74,17 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
     root_console.register_color("red", (255, 92, 92, 255));
     root_console.register_color("blue", (192, 192, 255, 255));
 
-    let player = commands
-        .spawn_bundle(PlayerBundle {
-            player: Player,
-            position: PlayerPosition(Position {
-                x: (CONSOLE_WIDTH / 2) as i32,
-                y: (CONSOLE_HEIGHT / 2) as i32,
-            }),
-        })
-        .id();
-
-    let mouse = commands
-        .spawn_bundle(MouseBundle {
-            mouse: Mouse,
-            position: MousePosition(Position { x: 0, y: 0 }),
-        })
-        .id();
-
-    commands.insert_resource(Entities { player, mouse });
+    commands.spawn_bundle(PlayerBundle {
+        player: Player,
+        position: PlayerPosition(Position {
+            x: (CONSOLE_WIDTH / 2) as i32,
+            y: (CONSOLE_HEIGHT / 2) as i32,
+        }),
+    });
+    commands.spawn_bundle(MouseBundle {
+        mouse: Mouse,
+        position: MousePosition(Position { x: 0, y: 0 }),
+    });
 
     // Tile map resource.
     commands.insert_resource(tile::TileMap::new());
@@ -107,30 +94,27 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
 
 fn input(
     input: Res<Input>,
-    entities: Res<Entities>,
-    mut player_query: Query<(&mut PlayerPosition, With<Player>)>,
-    mut mouse_query: Query<(&mut MousePosition, With<Mouse>)>,
+    mut player_query: Query<&mut PlayerPosition, With<Player>>,
+    mut mouse_query: Query<&mut MousePosition, With<Mouse>>,
 ) {
-    let mut player_position = player_query
-        .get_component_mut::<PlayerPosition>(entities.player)
-        .unwrap();
-
-    if input.key("ArrowLeft") {
-        player_position.0.x = (player_position.0.x - 1).max(1);
-    } else if input.key("ArrowRight") {
-        player_position.0.x = (player_position.0.x + 1).min(CONSOLE_WIDTH as i32 - 2);
+    // Update player position.
+    for mut player_position in player_query.iter_mut() {
+        if input.key("ArrowLeft") {
+            player_position.0.x = (player_position.0.x - 1).max(1);
+        } else if input.key("ArrowRight") {
+            player_position.0.x = (player_position.0.x + 1).min(CONSOLE_WIDTH as i32 - 2);
+        }
+        if input.key("ArrowUp") {
+            player_position.0.y = (player_position.0.y - 1).max(1);
+        } else if input.key("ArrowDown") {
+            player_position.0.y = (player_position.0.y + 1).min(CONSOLE_HEIGHT as i32 - 2);
+        }
     }
-    if input.key("ArrowUp") {
-        player_position.0.y = (player_position.0.y - 1).max(1);
-    } else if input.key("ArrowDown") {
-        player_position.0.y = (player_position.0.y + 1).min(CONSOLE_HEIGHT as i32 - 2);
+
+    // Update mouse position.
+    for mut mouse_position in mouse_query.iter_mut() {
+        let new_mouse_position = input.mouse_pos();
+        mouse_position.0.x = new_mouse_position.0 as i32;
+        mouse_position.0.y = new_mouse_position.1 as i32;
     }
-
-    let mut mouse_position = mouse_query
-        .get_component_mut::<MousePosition>(entities.mouse)
-        .unwrap();
-
-    let new_mouse_position = input.mouse_pos();
-    mouse_position.0.x = new_mouse_position.0 as i32;
-    mouse_position.0.y = new_mouse_position.1 as i32;
 }
