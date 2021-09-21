@@ -7,7 +7,10 @@ use bevy_doryen::{DoryenPlugin, DoryenPluginSettings, Input, RenderSystemExtensi
 use bevy_ecs::bundle::Bundle;
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res, ResMut};
+use tile::{xy_idx, TileMap};
 use tracing::info;
+
+use crate::tile::TileType;
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
@@ -64,7 +67,8 @@ fn main() {
         })
         .add_plugin(DoryenPlugin)
         .add_startup_system(init.system())
-        .add_system(input.system())
+        .add_system(player_input.system().chain(update_player_position.system()))
+        .add_system(mouse_input.system())
         .add_doryen_render_system(render::render.system())
         .run();
 }
@@ -92,27 +96,49 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
     info!("Finished initialization");
 }
 
-fn input(
-    input: Res<Input>,
-    mut player_query: Query<&mut PlayerPosition, With<Player>>,
-    mut mouse_query: Query<&mut MousePosition, With<Mouse>>,
+/// Get player position.
+fn player_input(input: Res<Input>) -> (i32, i32) {
+    let mut delta_x = 0;
+    let mut delta_y = 0;
+    if input.key("ArrowLeft") {
+        delta_x -= 1;
+    }
+    if input.key("ArrowRight") {
+        delta_x += 1;
+    }
+    if input.key("ArrowUp") {
+        delta_y -= 1;
+    }
+    if input.key("ArrowDown") {
+        delta_y += 1;
+    }
+    (delta_x, delta_y)
+}
+
+/// Update player position
+fn update_player_position(
+    In((delta_x, delta_y)): In<(i32, i32)>,
+    tile_map: Res<TileMap>,
+    mut q: Query<&mut PlayerPosition, With<Player>>,
 ) {
-    // Update player position.
-    for mut player_position in player_query.iter_mut() {
-        if input.key("ArrowLeft") {
-            player_position.0.x = (player_position.0.x - 1).max(1);
-        } else if input.key("ArrowRight") {
-            player_position.0.x = (player_position.0.x + 1).min(CONSOLE_WIDTH as i32 - 2);
-        }
-        if input.key("ArrowUp") {
-            player_position.0.y = (player_position.0.y - 1).max(1);
-        } else if input.key("ArrowDown") {
-            player_position.0.y = (player_position.0.y + 1).min(CONSOLE_HEIGHT as i32 - 2);
+    for mut player_position in q.iter_mut() {
+        let mut new_position = player_position.0;
+        new_position.x = (new_position.x + delta_x)
+            .max(0)
+            .min(CONSOLE_WIDTH as i32 - 1);
+        new_position.y = (new_position.y + delta_y)
+            .max(0)
+            .min(CONSOLE_HEIGHT as i32 - 1);
+
+        if tile_map.0[xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall {
+            player_position.0 = new_position;
         }
     }
+}
 
-    // Update mouse position.
-    for mut mouse_position in mouse_query.iter_mut() {
+/// Update mouse position.
+fn mouse_input(input: Res<Input>, mut q: Query<&mut MousePosition, With<Mouse>>) {
+    for mut mouse_position in q.iter_mut() {
         let new_mouse_position = input.mouse_pos();
         mouse_position.0.x = new_mouse_position.0 as i32;
         mouse_position.0.y = new_mouse_position.1 as i32;
