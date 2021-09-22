@@ -72,13 +72,6 @@ pub(crate) fn render(
             TextAlign::Center,
             None,
         );
-        root_console.print_color(
-            5,
-            5,
-            "#[blue]This blue text contains a #[red]red#[] word",
-            TextAlign::Left,
-            None,
-        );
         root_console.back(
             mouse_position.0.x as i32,
             mouse_position.0.y as i32,

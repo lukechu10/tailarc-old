@@ -1,7 +1,10 @@
 mod render;
 mod tile;
 
+use std::time::Instant;
+
 use bevy_app::App;
+use bevy_core::{CorePlugin, Time};
 use bevy_doryen::doryen::AppOptions;
 use bevy_doryen::{DoryenPlugin, DoryenPluginSettings, Input, RenderSystemExtensions, RootConsole};
 use bevy_ecs::bundle::Bundle;
@@ -14,6 +17,7 @@ use crate::tile::TileType;
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
+const INPUT_DELAY_SECS: f64 = 0.15;
 
 #[derive(Default, Copy, Clone, PartialEq)]
 struct Position<C> {
@@ -49,6 +53,7 @@ fn main() {
     tracing_subscriber::fmt::init();
 
     App::build()
+        .add_plugin(CorePlugin::default())
         .insert_resource(DoryenPluginSettings {
             app_options: AppOptions {
                 console_width: CONSOLE_WIDTH,
@@ -85,6 +90,7 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
             y: (CONSOLE_HEIGHT / 2) as i32,
         }),
     });
+
     commands.spawn_bundle(MouseBundle {
         mouse: Mouse,
         position: MousePosition(Position { x: 0, y: 0 }),
@@ -93,8 +99,12 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
     // Tile map resource.
     commands.insert_resource(tile::TileMap::new());
 
+    commands.insert_resource(LastInputInstant(None));
+
     info!("Finished initialization");
 }
+
+struct LastInputInstant(Option<Instant>);
 
 /// Get player position.
 fn player_input(input: Res<Input>) -> (i32, i32) {
@@ -119,8 +129,26 @@ fn player_input(input: Res<Input>) -> (i32, i32) {
 fn update_player_position(
     In((delta_x, delta_y)): In<(i32, i32)>,
     tile_map: Res<TileMap>,
+    time: Res<Time>,
+    mut last_input: ResMut<LastInputInstant>,
     mut q: Query<&mut PlayerPosition, With<Player>>,
 ) {
+    if (delta_x, delta_y) != (0, 0) {
+        let now = time.last_update().unwrap_or_else(|| time.startup());
+        if let Some(last_input) = last_input.0.as_mut() {
+            let elapsed = now.duration_since(*last_input).as_secs_f64();
+            if elapsed > INPUT_DELAY_SECS {
+                // Update last input time.
+                *last_input = now;
+            } else {
+                // Return early if two sequential inputs are too close together.
+                return;
+            }
+        } else {
+            // Initialize last input instant.
+            last_input.0 = Some(now);
+        }
+    }
     for mut player_position in q.iter_mut() {
         let mut new_position = player_position.0;
         new_position.x = (new_position.x + delta_x)
