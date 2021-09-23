@@ -2,15 +2,15 @@ mod render;
 mod tile;
 mod visibility;
 
-use std::time::Instant;
+use std::path::Path;
 
 use bevy_app::App;
-use bevy_core::{CorePlugin, Time};
-use bevy_doryen::doryen::AppOptions;
-use bevy_doryen::{DoryenPlugin, DoryenPluginSettings, Input, RenderSystemExtensions, RootConsole};
+use bevy_bracket_lib::BracketLibPlugin;
+use bevy_core::CorePlugin;
 use bevy_ecs::bundle::Bundle;
 use bevy_ecs::prelude::*;
-use bevy_ecs::system::{Commands, IntoSystem, Query, Res, ResMut};
+use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
+use bracket_lib::prelude::*;
 use tile::{xy_idx, TileMap};
 use tracing::info;
 use visibility::Viewshed;
@@ -19,7 +19,6 @@ use crate::tile::TileType;
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
-const INPUT_DELAY_SECS: f64 = 0.15;
 
 #[derive(Default, Copy, Clone, PartialEq)]
 struct Position<C> {
@@ -55,37 +54,27 @@ struct MouseBundle {
 fn main() {
     tracing_subscriber::fmt::init();
 
+    let font_path = Path::new("static/terminal_8x8.png");
+    let font_path = font_path.canonicalize().unwrap();
+
     App::build()
         .add_plugin(CorePlugin::default())
-        .insert_resource(DoryenPluginSettings {
-            app_options: AppOptions {
-                console_width: CONSOLE_WIDTH,
-                console_height: CONSOLE_HEIGHT,
-                screen_width: CONSOLE_WIDTH * 8,
-                screen_height: CONSOLE_HEIGHT * 8,
-                window_title: String::from("Tailarc"),
-                font_path: String::from("terminal_8x8.png"),
-                vsync: true,
-                fullscreen: false,
-                show_cursor: true,
-                resizable: true,
-                intercept_close_request: false,
-            },
-            ..Default::default()
-        })
-        .add_plugin(DoryenPlugin)
+        .add_plugin(BracketLibPlugin::new(
+            BTermBuilder::new()
+                .with_simple_console(CONSOLE_WIDTH, CONSOLE_HEIGHT, font_path.to_str().unwrap())
+                .with_title("Tailarc")
+                .with_font(font_path.to_str().unwrap(), 8, 8)
+                .build()
+                .unwrap(),
+        ))
         .add_startup_system(init.system())
         .add_system(player_input.system().chain(update_player_position.system()))
         .add_system(mouse_input.system())
-        .add_doryen_render_system(render::render.system())
+        .add_system(render::render.system())
         .run();
 }
 
-fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
-    root_console.register_color("white", (255, 255, 255, 255));
-    root_console.register_color("red", (255, 92, 92, 255));
-    root_console.register_color("blue", (192, 192, 255, 255));
-
+fn init(mut commands: Commands) {
     commands.spawn_bundle(PlayerBundle {
         player: Player,
         position: PlayerPosition(Position {
@@ -106,27 +95,23 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
     // Tile map resource.
     commands.insert_resource(tile::TileMap::new());
 
-    commands.insert_resource(LastInputInstant(None));
-
     info!("Finished initialization");
 }
 
-struct LastInputInstant(Option<Instant>);
-
 /// Get player position.
-fn player_input(input: Res<Input>) -> (i32, i32) {
+fn player_input(bterm: Res<BTerm>) -> (i32, i32) {
     let mut delta_x = 0;
     let mut delta_y = 0;
-    if input.key("ArrowLeft") {
+    if bterm.key == Some(VirtualKeyCode::Left) {
         delta_x -= 1;
     }
-    if input.key("ArrowRight") {
+    if bterm.key == Some(VirtualKeyCode::Right) {
         delta_x += 1;
     }
-    if input.key("ArrowUp") {
+    if bterm.key == Some(VirtualKeyCode::Up) {
         delta_y -= 1;
     }
-    if input.key("ArrowDown") {
+    if bterm.key == Some(VirtualKeyCode::Down) {
         delta_y += 1;
     }
     (delta_x, delta_y)
@@ -136,26 +121,8 @@ fn player_input(input: Res<Input>) -> (i32, i32) {
 fn update_player_position(
     In((delta_x, delta_y)): In<(i32, i32)>,
     map: Res<TileMap>,
-    time: Res<Time>,
-    mut last_input: ResMut<LastInputInstant>,
     mut q: Query<&mut PlayerPosition, With<Player>>,
 ) {
-    if (delta_x, delta_y) != (0, 0) {
-        let now = time.last_update().unwrap_or_else(|| time.startup());
-        if let Some(last_input) = last_input.0.as_mut() {
-            let elapsed = now.duration_since(*last_input).as_secs_f64();
-            if elapsed > INPUT_DELAY_SECS {
-                // Update last input time.
-                *last_input = now;
-            } else {
-                // Return early if two sequential inputs are too close together.
-                return;
-            }
-        } else {
-            // Initialize last input instant.
-            last_input.0 = Some(now);
-        }
-    }
     for mut player_position in q.iter_mut() {
         let mut new_position = player_position.0;
         new_position.x = (new_position.x + delta_x)
@@ -172,10 +139,10 @@ fn update_player_position(
 }
 
 /// Update mouse position.
-fn mouse_input(input: Res<Input>, mut q: Query<&mut MousePosition, With<Mouse>>) {
+fn mouse_input(bterm: Res<BTerm>, mut q: Query<&mut MousePosition, With<Mouse>>) {
     for mut mouse_position in q.iter_mut() {
-        let new_mouse_position = input.mouse_pos();
-        mouse_position.0.x = new_mouse_position.0 as i32;
-        mouse_position.0.y = new_mouse_position.1 as i32;
+        let new_mouse_position = bterm.mouse_pos();
+        mouse_position.0.x = new_mouse_position.0;
+        mouse_position.0.y = new_mouse_position.1;
     }
 }
