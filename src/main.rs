@@ -1,5 +1,6 @@
 mod render;
 mod tile;
+mod visibility;
 
 use std::time::Instant;
 
@@ -12,6 +13,7 @@ use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res, ResMut};
 use tile::{xy_idx, TileMap};
 use tracing::info;
+use visibility::Viewshed;
 
 use crate::tile::TileType;
 
@@ -35,6 +37,7 @@ struct PlayerPosition(Position<i32>);
 struct PlayerBundle {
     player: Player,
     position: PlayerPosition,
+    viewshed: Viewshed,
 }
 
 #[derive(Default)]
@@ -89,6 +92,10 @@ fn init(mut root_console: ResMut<RootConsole>, mut commands: Commands) {
             x: (CONSOLE_WIDTH / 2) as i32,
             y: (CONSOLE_HEIGHT / 2) as i32,
         }),
+        viewshed: Viewshed {
+            visible_tiles: Vec::new(),
+            range: 8,
+        },
     });
 
     commands.spawn_bundle(MouseBundle {
@@ -128,7 +135,7 @@ fn player_input(input: Res<Input>) -> (i32, i32) {
 /// Update player position
 fn update_player_position(
     In((delta_x, delta_y)): In<(i32, i32)>,
-    tile_map: Res<TileMap>,
+    map: Res<TileMap>,
     time: Res<Time>,
     mut last_input: ResMut<LastInputInstant>,
     mut q: Query<&mut PlayerPosition, With<Player>>,
@@ -158,7 +165,7 @@ fn update_player_position(
             .max(0)
             .min(CONSOLE_HEIGHT as i32 - 1);
 
-        if tile_map.0[xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall {
+        if map.0[xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall {
             player_position.0 = new_position;
         }
     }

@@ -38,6 +38,13 @@ impl TileMap {
 
         Self(map)
     }
+
+    pub fn is_opaque(&self, idx: usize) -> bool {
+        match self.0[idx] {
+            TileType::Wall => true,
+            TileType::Floor => false,
+        }
+    }
 }
 
 impl Default for TileMap {

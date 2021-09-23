@@ -8,7 +8,7 @@ use crate::tile::{TileMap, TileType};
 use crate::{Mouse, MousePosition, Player, PlayerPosition, CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
 pub(crate) fn render(
-    tile_map: Res<TileMap>,
+    map: Res<TileMap>,
     mut root_console: ResMut<RootConsole>,
     player_query: Query<&PlayerPosition, With<Player>>,
     mouse_query: Query<&MousePosition, With<Mouse>>,
@@ -16,7 +16,7 @@ pub(crate) fn render(
     // Display tile map.
     let mut x = 0;
     let mut y = 0;
-    for tile in tile_map.0 {
+    for tile in map.0 {
         match tile {
             TileType::Wall => root_console.cell(
                 x,
