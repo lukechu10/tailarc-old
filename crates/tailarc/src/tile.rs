@@ -1,3 +1,4 @@
+use bracket_lib::prelude::{Algorithm2D, BaseMap, Point};
 use rand::Rng;
 
 use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
@@ -11,7 +12,11 @@ pub(crate) enum TileType {
 pub(crate) const TILE_MAP_SIZE: usize = CONSOLE_WIDTH as usize * CONSOLE_HEIGHT as usize;
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct TileMap(pub [TileType; TILE_MAP_SIZE]);
+pub(crate) struct TileMap {
+    pub tiles: [TileType; TILE_MAP_SIZE],
+    pub revealed_tiles: [bool; TILE_MAP_SIZE],
+    pub visible_tiles: [bool; TILE_MAP_SIZE],
+}
 
 impl TileMap {
     pub fn new() -> Self {
@@ -36,13 +41,10 @@ impl TileMap {
             map[idx] = TileType::Wall;
         }
 
-        Self(map)
-    }
-
-    pub fn is_opaque(&self, idx: usize) -> bool {
-        match self.0[idx] {
-            TileType::Wall => true,
-            TileType::Floor => false,
+        Self {
+            tiles: map,
+            revealed_tiles: [false; TILE_MAP_SIZE],
+            visible_tiles: [false; TILE_MAP_SIZE],
         }
     }
 }
@@ -50,6 +52,21 @@ impl TileMap {
 impl Default for TileMap {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Algorithm2D for TileMap {
+    fn dimensions(&self) -> Point {
+        Point::new(CONSOLE_WIDTH, CONSOLE_HEIGHT)
+    }
+}
+
+impl BaseMap for TileMap {
+    fn is_opaque(&self, idx: usize) -> bool {
+        match self.tiles[idx] {
+            TileType::Wall => true,
+            TileType::Floor => false,
+        }
     }
 }
 

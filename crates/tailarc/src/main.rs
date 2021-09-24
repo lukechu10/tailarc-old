@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 mod render;
 mod tile;
 mod visibility;
@@ -10,17 +12,17 @@ use bevy_core::CorePlugin;
 use bevy_ecs::bundle::Bundle;
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
+use bevy_log::info;
 use bracket_lib::prelude::*;
 use tile::{xy_idx, TileMap};
-use tracing::info;
-use visibility::Viewshed;
+use visibility::{visibility_system, Viewshed};
 
 use crate::tile::TileType;
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
 
-#[derive(Default, Copy, Clone, PartialEq)]
+#[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 struct Position<C> {
     x: C,
     y: C,
@@ -69,6 +71,7 @@ fn main() {
         ))
         .add_startup_system(init.system())
         .add_system(player_input.system().chain(update_player_position.system()))
+        .add_system(visibility_system.system())
         .add_system(mouse_input.system())
         .add_system(render::render.system())
         .run();
@@ -84,6 +87,7 @@ fn init(mut commands: Commands) {
         viewshed: Viewshed {
             visible_tiles: Vec::new(),
             range: 8,
+            dirty: true,
         },
     });
 
@@ -121,19 +125,22 @@ fn player_input(bterm: Res<BTerm>) -> (i32, i32) {
 fn update_player_position(
     In((delta_x, delta_y)): In<(i32, i32)>,
     map: Res<TileMap>,
-    mut q: Query<&mut PlayerPosition, With<Player>>,
+    mut q: Query<(&mut PlayerPosition, &mut Viewshed), With<Player>>,
 ) {
-    for mut player_position in q.iter_mut() {
-        let mut new_position = player_position.0;
-        new_position.x = (new_position.x + delta_x)
-            .max(0)
-            .min(CONSOLE_WIDTH as i32 - 1);
-        new_position.y = (new_position.y + delta_y)
-            .max(0)
-            .min(CONSOLE_HEIGHT as i32 - 1);
+    if (delta_x, delta_y) != (0, 0) {
+        for (mut player_position, mut viewshed) in q.iter_mut() {
+            let mut new_position = player_position.0;
+            new_position.x = (new_position.x + delta_x)
+                .max(0)
+                .min(CONSOLE_WIDTH as i32 - 1);
+            new_position.y = (new_position.y + delta_y)
+                .max(0)
+                .min(CONSOLE_HEIGHT as i32 - 1);
 
-        if map.0[xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall {
-            player_position.0 = new_position;
+            if map.tiles[xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall {
+                player_position.0 = new_position;
+                viewshed.dirty = true;
+            }
         }
     }
 }
