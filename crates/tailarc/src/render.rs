@@ -36,7 +36,7 @@ pub(crate) fn render(
             let mut fg;
             match tile {
                 TileType::Wall => {
-                    fg = RGB::from_u8(128, 128, 128);
+                    fg = RGB::from_u8(100, 232, 235);
                     glyph = '#' as u16;
                 }
                 TileType::Floor => {
