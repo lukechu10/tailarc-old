@@ -1,7 +1,7 @@
 #![allow(clippy::type_complexity)]
 
 mod render;
-mod tile;
+mod tilemap;
 mod visibility;
 
 use std::path::Path;
@@ -14,10 +14,10 @@ use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
 use bevy_log::info;
 use bracket_lib::prelude::*;
-use tile::{xy_idx, TileMap};
+use tilemap::TileMap;
 use visibility::{visibility_system, Viewshed};
 
-use crate::tile::TileType;
+use crate::tilemap::TileType;
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
@@ -97,7 +97,7 @@ fn init(mut commands: Commands) {
     });
 
     // Tile map resource.
-    commands.insert_resource(tile::TileMap::new());
+    commands.insert_resource(tilemap::TileMap::new(CONSOLE_WIDTH, CONSOLE_HEIGHT));
 
     info!("Finished initialization");
 }
@@ -137,7 +137,8 @@ fn update_player_position(
                 .max(0)
                 .min(CONSOLE_HEIGHT as i32 - 1);
 
-            if map.tiles[xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall {
+            if map.tiles[map.xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall
+            {
                 player_position.0 = new_position;
                 viewshed.dirty = true;
             }

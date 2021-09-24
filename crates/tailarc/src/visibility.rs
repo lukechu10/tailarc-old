@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::{field_of_view, Point};
 
-use crate::tile::{xy_idx, TileMap};
+use crate::tilemap::TileMap;
 use crate::{PlayerPosition, Position, CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
 pub(crate) struct Viewshed {
@@ -29,7 +29,7 @@ pub(crate) fn visibility_system(
             // Reveal what the player can see.
             map.visible_tiles.fill(false);
             for pos in &viewshed.visible_tiles {
-                let idx = xy_idx(pos.x as u32, pos.y as u32);
+                let idx = map.xy_idx(pos.x as u32, pos.y as u32);
                 map.revealed_tiles[idx] = true;
                 map.visible_tiles[idx] = true;
             }
