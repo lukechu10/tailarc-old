@@ -1,8 +1,6 @@
 use bracket_lib::prelude::{Algorithm2D, BaseMap, Point};
 use rand::Rng;
 
-use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum TileType {
     Wall,
@@ -37,8 +35,8 @@ impl TileMap {
         // Place some random walls.
         let mut rng = rand::thread_rng();
         for _i in 0..400 {
-            let x = rng.gen_range(1..CONSOLE_WIDTH - 1);
-            let y = rng.gen_range(1..CONSOLE_HEIGHT - 1);
+            let x = rng.gen_range(1..width - 1);
+            let y = rng.gen_range(1..height - 1);
             let idx = Self::xy_idx_with_width(x, y, width);
             map[idx] = TileType::Wall;
         }

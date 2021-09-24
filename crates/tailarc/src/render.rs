@@ -4,7 +4,7 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::{BTerm, RGB};
 
 use crate::tilemap::{TileMap, TileType};
-use crate::{PlayerPosition, CONSOLE_WIDTH};
+use crate::PlayerPosition;
 
 pub(crate) fn render(
     map: Res<TileMap>,
@@ -41,14 +41,21 @@ pub(crate) fn render(
         }
         // Move the coordinates
         x += 1;
-        if x >= CONSOLE_WIDTH as i32 {
+        if x >= map.width as i32 {
             x = 0;
             y += 1;
         }
     }
 
     // Draw box around console.
-    bterm.draw_hollow_box_double(0, 0, map.width - 1, map.height - 1, (100, 100, 100), (0, 0, 0));
+    bterm.draw_hollow_box_double(
+        0,
+        0,
+        map.width - 1,
+        map.height - 1,
+        (100, 100, 100),
+        (0, 0, 0),
+    );
 
     // Display player.
     bterm.set(
