@@ -34,7 +34,7 @@ impl TileMap {
 
         // Place some random walls.
         let mut rng = rand::thread_rng();
-        for _i in 0..400 {
+        for _i in 0..150 {
             let x = rng.gen_range(1..width - 1);
             let y = rng.gen_range(1..height - 1);
             let idx = Self::xy_idx_with_width(x, y, width);
