@@ -4,6 +4,7 @@ mod render;
 mod tilemap;
 mod visibility;
 
+use std::collections::HashSet;
 use std::path::Path;
 
 use bevy_app::App;
@@ -85,7 +86,7 @@ fn init(mut commands: Commands) {
             y: (CONSOLE_HEIGHT / 2) as i32,
         }),
         viewshed: Viewshed {
-            visible_tiles: Vec::new(),
+            visible_tiles: HashSet::new(),
             range: 8,
             dirty: true,
         },
