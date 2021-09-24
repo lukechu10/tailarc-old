@@ -97,7 +97,11 @@ fn init(mut commands: Commands) {
     });
 
     // Tile map resource.
-    commands.insert_resource(tilemap::TileMap::new(CONSOLE_WIDTH, CONSOLE_HEIGHT));
+    commands.insert_resource(
+        tilemap::TileMap::new_from_ascii_file("static/levels/finlai.txt")
+            .expect("could not create level"),
+        // tilemap::TileMap::new(CONSOLE_WIDTH, CONSOLE_HEIGHT),
+    );
 
     info!("Finished initialization");
 }
@@ -130,8 +134,12 @@ fn update_player_position(
     if (delta_x, delta_y) != (0, 0) {
         for (mut player_position, mut viewshed) in q.iter_mut() {
             let mut new_position = player_position.0;
-            new_position.x = (new_position.x + delta_x).max(0).min(map.width as i32 - 1);
-            new_position.y = (new_position.y + delta_y).max(0).min(map.height as i32 - 1);
+            new_position.x = (new_position.x + delta_x)
+                .max(0)
+                .min(map.width.saturating_sub(1) as i32);
+            new_position.y = (new_position.y + delta_y)
+                .max(0)
+                .min(map.height.saturating_sub(1) as i32);
 
             if map.tiles[map.xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall
             {

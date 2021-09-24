@@ -1849,6 +1849,7 @@ dependencies = [
 name = "tailarc"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy_app",
  "bevy_bracket_lib",
  "bevy_core",

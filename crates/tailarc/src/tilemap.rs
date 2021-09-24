@@ -1,3 +1,6 @@
+use std::path::Path;
+
+use anyhow::{Context, Result};
 use bracket_lib::prelude::{Algorithm2D, BaseMap, Point};
 use rand::Rng;
 
@@ -5,6 +8,17 @@ use rand::Rng;
 pub(crate) enum TileType {
     Wall,
     Floor,
+    Blank,
+}
+
+impl TileType {
+    pub fn from_ascii_byte(ch: u8) -> Self {
+        match ch {
+            b'#' => TileType::Wall,
+            b'.' => TileType::Floor,
+            _ => panic!("Unrecognized tile character {}", ch),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -50,6 +64,44 @@ impl TileMap {
         }
     }
 
+    pub fn new_from_ascii_file(path: impl AsRef<Path>) -> Result<Self> {
+        let ascii = std::fs::read_to_string(&path).with_context(|| {
+            format!(
+                "could not open file at {} for loading level",
+                path.as_ref().display()
+            )
+        })?;
+
+        // Calculate the width and height of the map.
+        let mut width: u32 = 0;
+        let mut height: u32 = 0;
+        for line in ascii.lines() {
+            if line.len() as u32 > width {
+                width = line.len() as u32;
+            }
+            height += 1;
+        }
+
+        let tile_map_size = (width * height) as usize;
+        let mut map = vec![TileType::Floor; tile_map_size];
+
+        // Read the map data from `ascii`.
+        for (y, line) in ascii.lines().enumerate() {
+            for (x, byte) in line.bytes().enumerate() {
+                let idx = Self::xy_idx_with_width(x as u32, y as u32, width);
+                map[idx] = TileType::from_ascii_byte(byte);
+            }
+        }
+
+        Ok(Self {
+            tiles: map,
+            revealed_tiles: vec![false; tile_map_size],
+            visible_tiles: vec![false; tile_map_size],
+            width,
+            height,
+        })
+    }
+
     pub fn xy_idx(&self, x: u32, y: u32) -> usize {
         (y as usize * self.width as usize) + x as usize
     }
@@ -69,7 +121,7 @@ impl BaseMap for TileMap {
     fn is_opaque(&self, idx: usize) -> bool {
         match self.tiles[idx] {
             TileType::Wall => true,
-            TileType::Floor => false,
+            _ => false,
         }
     }
 }

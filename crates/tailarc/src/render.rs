@@ -4,7 +4,7 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::{BTerm, RGB};
 
 use crate::tilemap::{TileMap, TileType};
-use crate::PlayerPosition;
+use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH, PlayerPosition};
 
 pub(crate) fn render(
     map: Res<TileMap>,
@@ -19,7 +19,7 @@ pub(crate) fn render(
     let mut y = 0;
 
     let player_pos = player_query.single().unwrap();
-    let player_screen_pos = (map.width / 2, map.height / 2);
+    let player_screen_pos = (CONSOLE_WIDTH / 2, CONSOLE_HEIGHT / 2);
 
     for ((tile, revealed), visible) in map
         .tiles
@@ -43,6 +43,10 @@ pub(crate) fn render(
                     fg = RGB::from_u8(52, 232, 235);
                     glyph = '.' as u16;
                 }
+                TileType::Blank => {
+                    fg = RGB::from_u8(0, 0, 0);
+                    glyph = ' ' as u16;
+                }
             }
             if !*visible {
                 fg = fg.to_greyscale();
@@ -63,8 +67,8 @@ pub(crate) fn render(
     bterm.draw_hollow_box_double(
         0,
         0,
-        map.width - 1,
-        map.height - 1,
+        CONSOLE_WIDTH - 1,
+        CONSOLE_HEIGHT - 1,
         (100, 100, 100),
         (0, 0, 0),
     );
