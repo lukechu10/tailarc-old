@@ -1,5 +1,7 @@
 #![allow(clippy::type_complexity)]
 
+mod gamelog;
+mod gui;
 mod render;
 mod tilemap;
 mod visibility;
@@ -15,6 +17,7 @@ use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
 use bevy_log::info;
 use bracket_lib::prelude::*;
+use gamelog::GameLog;
 use tilemap::TileMap;
 use visibility::{visibility_system, Viewshed};
 
@@ -32,6 +35,14 @@ struct Position<C> {
 #[derive(Default)]
 struct Player;
 
+#[derive(Clone, PartialEq)]
+struct CombatStats {
+    hp: i32,
+    max_hp: i32,
+    defense: i32,
+    power: i32,
+}
+
 #[derive(Default, Copy, Clone, PartialEq)]
 struct PlayerPosition(Position<i32>);
 
@@ -40,6 +51,7 @@ struct PlayerBundle {
     player: Player,
     position: PlayerPosition,
     viewshed: Viewshed,
+    combat_stats: CombatStats,
 }
 
 #[derive(Default)]
@@ -60,21 +72,26 @@ fn main() {
     let font_path = Path::new("static/terminal_8x8.png");
     let font_path = font_path.canonicalize().unwrap();
 
+    let mut bterm = BTermBuilder::new()
+        .with_simple_console(CONSOLE_WIDTH, CONSOLE_HEIGHT, font_path.to_str().unwrap())
+        .with_title("Tailarc")
+        .with_font(font_path.to_str().unwrap(), 8, 8)
+        .build()
+        .unwrap();
+    bterm.with_post_scanlines(true);
+
     App::build()
         .add_plugin(CorePlugin::default())
-        .add_plugin(BracketLibPlugin::new(
-            BTermBuilder::new()
-                .with_simple_console(CONSOLE_WIDTH, CONSOLE_HEIGHT, font_path.to_str().unwrap())
-                .with_title("Tailarc")
-                .with_font(font_path.to_str().unwrap(), 8, 8)
-                .build()
-                .unwrap(),
-        ))
+        .add_plugin(BracketLibPlugin::new(bterm))
         .add_startup_system(init.system())
         .add_system(player_input.system().chain(update_player_position.system()))
         .add_system(visibility_system.system())
         .add_system(mouse_input.system())
-        .add_system(render::render.system())
+        .add_system(
+            render::render
+                .system()
+                .chain(gui::render_ui_system.system()),
+        )
         .run();
 }
 
@@ -87,11 +104,18 @@ fn init(mut commands: Commands) {
         }),
         viewshed: Viewshed {
             visible_tiles: HashSet::new(),
-            range: 8,
+            // Range is the half the diagonal of the screen so that whole screen is visible.
+            range: f64::sqrt((CONSOLE_WIDTH / 2).pow(2) as f64 + (CONSOLE_HEIGHT / 2).pow(2) as f64)
+                as i32,
             dirty: true,
         },
+        combat_stats: CombatStats {
+            hp: 30,
+            max_hp: 30,
+            defense: 2,
+            power: 5,
+        },
     });
-
     commands.spawn_bundle(MouseBundle {
         mouse: Mouse,
         position: MousePosition(Position { x: 0, y: 0 }),
@@ -99,10 +123,13 @@ fn init(mut commands: Commands) {
 
     // Tile map resource.
     commands.insert_resource(
-        tilemap::TileMap::new_from_ascii_file("static/levels/finlai.txt")
+        tilemap::TileMap::new_from_ascii_file("static/levels/finlai.txt", false)
             .expect("could not create level"),
-        // tilemap::TileMap::new(CONSOLE_WIDTH, CONSOLE_HEIGHT),
     );
+    // Game log resource.
+    commands.insert_resource(gamelog::GameLog {
+        entries: vec!["Welcome to Tailarc!".to_string()],
+    });
 
     info!("Finished initialization");
 }
@@ -130,6 +157,7 @@ fn player_input(bterm: Res<BTerm>) -> (i32, i32) {
 fn update_player_position(
     In((delta_x, delta_y)): In<(i32, i32)>,
     map: Res<TileMap>,
+    mut game_log: ResMut<GameLog>,
     mut q: Query<(&mut PlayerPosition, &mut Viewshed), With<Player>>,
 ) {
     if (delta_x, delta_y) != (0, 0) {
@@ -146,6 +174,8 @@ fn update_player_position(
             {
                 player_position.0 = new_position;
                 viewshed.dirty = true;
+            } else {
+                game_log.entries.push("Cannot move into a wall".to_string());
             }
         }
     }

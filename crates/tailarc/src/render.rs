@@ -1,11 +1,12 @@
 //! `doryen-rs` rendering code.
 
 use bevy_ecs::prelude::*;
-use bracket_lib::prelude::{BTerm, RGB};
+use bracket_lib::prelude::*;
 
 use crate::tilemap::{TileMap, TileType};
-use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH, PlayerPosition};
+use crate::{PlayerPosition, CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
+/// Renders the [`TileMap`] to the screen.
 pub(crate) fn render(
     map: Res<TileMap>,
     mut bterm: ResMut<BTerm>,
@@ -18,8 +19,11 @@ pub(crate) fn render(
     let mut x = 0;
     let mut y = 0;
 
+    let console_width_for_map = CONSOLE_WIDTH;
+    let console_height_for_map = CONSOLE_HEIGHT - 6;
+
     let player_pos = player_query.single().unwrap();
-    let player_screen_pos = (CONSOLE_WIDTH / 2, CONSOLE_HEIGHT / 2);
+    let player_screen_pos = (console_width_for_map / 2, console_height_for_map / 2);
 
     for ((tile, revealed), visible) in map
         .tiles
@@ -34,26 +38,42 @@ pub(crate) fn render(
         if *revealed {
             let glyph;
             let mut fg;
+            let mut bg;
             match tile {
                 TileType::Wall => {
-                    fg = RGB::from_u8(100, 232, 235);
+                    fg = RGB::from_u8(179, 179, 179);
+                    bg = RGB::from_u8(69, 69, 69);
                     glyph = '#' as u16;
                 }
                 TileType::Floor => {
-                    fg = RGB::from_u8(52, 232, 235);
+                    fg = RGB::from_u8(179, 118, 112);
+                    bg = RGB::from_u8(31, 23, 23);
                     glyph = '.' as u16;
                 }
-                TileType::Blank => {
+                TileType::BrickPath => {
                     fg = RGB::from_u8(0, 0, 0);
-                    glyph = ' ' as u16;
+                    bg = RGB::from_u8(217, 125, 72);
+                    glyph = '.' as u16;
+                }
+                TileType::Grass => {
+                    fg = RGB::from_u8(66, 245, 84);
+                    bg = RGB::from_u8(63, 224, 79);
+                    glyph = '.' as u16;
                 }
             }
             if !*visible {
-                fg = fg.to_greyscale();
+                if map.show_non_visible {
+                    fg = fg.to_greyscale();
+                    bg = bg.to_greyscale();
+                } else {
+                    // Do not paint tile.
+                    fg = RGB::named(BLACK);
+                    bg = RGB::named(BLACK);
+                }
             }
             // We don't need to check if the tile is outside the screen because it is already
             // checked by the `.set` method.
-            bterm.set(x_pos, y_pos, fg, RGB::from_u8(0, 0, 0), glyph);
+            bterm.set(x_pos, y_pos, fg, bg, glyph);
         }
         // Move the coordinates
         x += 1;
@@ -69,8 +89,8 @@ pub(crate) fn render(
         0,
         CONSOLE_WIDTH - 1,
         CONSOLE_HEIGHT - 1,
-        (100, 100, 100),
-        (0, 0, 0),
+        RGB::named(WHITE),
+        RGB::named(BLACK),
     );
 
     // Display player. Player is always at the center of the screen.

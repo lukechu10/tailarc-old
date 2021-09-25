@@ -8,7 +8,8 @@ use rand::Rng;
 pub(crate) enum TileType {
     Wall,
     Floor,
-    Blank,
+    BrickPath,
+    Grass,
 }
 
 impl TileType {
@@ -16,6 +17,8 @@ impl TileType {
         match ch {
             b'#' => TileType::Wall,
             b'.' => TileType::Floor,
+            b'p' => TileType::BrickPath,
+            b' ' => TileType::Grass,
             _ => panic!("Unrecognized tile character {}", ch),
         }
     }
@@ -26,12 +29,14 @@ pub(crate) struct TileMap {
     pub tiles: Vec<TileType>,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
+    pub show_non_visible: bool,
     pub width: u32,
     pub height: u32,
 }
 
 impl TileMap {
-    pub fn new(width: u32, height: u32) -> Self {
+    #[allow(dead_code)] // TODO: remove
+    pub fn new(width: u32, height: u32, show_non_visible: bool) -> Self {
         let tile_map_size = (width * height) as usize;
 
         let mut map = vec![TileType::Floor; tile_map_size];
@@ -59,12 +64,13 @@ impl TileMap {
             tiles: map,
             revealed_tiles: vec![false; tile_map_size],
             visible_tiles: vec![false; tile_map_size],
+            show_non_visible,
             width,
             height,
         }
     }
 
-    pub fn new_from_ascii_file(path: impl AsRef<Path>) -> Result<Self> {
+    pub fn new_from_ascii_file(path: impl AsRef<Path>, show_non_visible: bool) -> Result<Self> {
         let ascii = std::fs::read_to_string(&path).with_context(|| {
             format!(
                 "could not open file at {} for loading level",
@@ -97,6 +103,7 @@ impl TileMap {
             tiles: map,
             revealed_tiles: vec![false; tile_map_size],
             visible_tiles: vec![false; tile_map_size],
+            show_non_visible,
             width,
             height,
         })
@@ -119,9 +126,6 @@ impl Algorithm2D for TileMap {
 
 impl BaseMap for TileMap {
     fn is_opaque(&self, idx: usize) -> bool {
-        match self.tiles[idx] {
-            TileType::Wall => true,
-            _ => false,
-        }
+        matches!(self.tiles[idx], TileType::Wall)
     }
 }
