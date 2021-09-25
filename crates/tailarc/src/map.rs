@@ -5,7 +5,7 @@ use bracket_lib::prelude::{Algorithm2D, BaseMap, Point};
 use rand::Rng;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum TileType {
+pub(crate) enum Tile {
     Wall,
     Floor,
     BrickPath,
@@ -13,8 +13,8 @@ pub(crate) enum TileType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct TileMap {
-    pub tiles: Vec<TileType>,
+pub(crate) struct Map {
+    pub tiles: Vec<Tile>,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
     pub show_non_visible: bool,
@@ -22,20 +22,20 @@ pub(crate) struct TileMap {
     pub height: u32,
 }
 
-impl TileMap {
+impl Map {
     pub fn new(width: u32, height: u32, show_non_visible: bool) -> Self {
         let tile_map_size = (width * height) as usize;
 
-        let mut map = vec![TileType::Floor; tile_map_size];
+        let mut map = vec![Tile::Floor; tile_map_size];
 
         // Make the boundaries walls.
         for x in 0..width {
-            map[Self::xy_idx_with_width(x, 0, width)] = TileType::Wall;
-            map[Self::xy_idx_with_width(x, height - 1, width)] = TileType::Wall;
+            map[Self::xy_idx_with_width(x, 0, width)] = Tile::Wall;
+            map[Self::xy_idx_with_width(x, height - 1, width)] = Tile::Wall;
         }
         for y in 0..height {
-            map[Self::xy_idx_with_width(0, y, width)] = TileType::Wall;
-            map[Self::xy_idx_with_width(width - 1, y, width)] = TileType::Wall;
+            map[Self::xy_idx_with_width(0, y, width)] = Tile::Wall;
+            map[Self::xy_idx_with_width(width - 1, y, width)] = Tile::Wall;
         }
 
         // Place some random walls.
@@ -44,7 +44,7 @@ impl TileMap {
             let x = rng.gen_range(1..width - 1);
             let y = rng.gen_range(1..height - 1);
             let idx = Self::xy_idx_with_width(x, y, width);
-            map[idx] = TileType::Wall;
+            map[idx] = Tile::Wall;
         }
 
         Self {
@@ -66,14 +66,14 @@ impl TileMap {
     }
 }
 
-impl Algorithm2D for TileMap {
+impl Algorithm2D for Map {
     fn dimensions(&self) -> Point {
         Point::new(self.width, self.height)
     }
 }
 
-impl BaseMap for TileMap {
+impl BaseMap for Map {
     fn is_opaque(&self, idx: usize) -> bool {
-        matches!(self.tiles[idx], TileType::Wall)
+        matches!(self.tiles[idx], Tile::Wall)
     }
 }

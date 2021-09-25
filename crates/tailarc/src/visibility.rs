@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::{field_of_view_set, Point};
 
-use crate::tilemap::TileMap;
+use crate::map::Map;
 use crate::PlayerPosition;
 
 pub(crate) struct Viewshed {
@@ -13,7 +13,7 @@ pub(crate) struct Viewshed {
 }
 
 pub(crate) fn visibility_system(
-    mut map: ResMut<TileMap>,
+    mut map: ResMut<Map>,
     mut q: Query<(&mut Viewshed, &PlayerPosition)>,
 ) {
     for (mut viewshed, pos) in q.iter_mut() {

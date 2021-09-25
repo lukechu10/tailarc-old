@@ -3,12 +3,12 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::tilemap::{TileMap, TileType};
+use crate::map::{Map, Tile};
 use crate::{PlayerPosition, CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
 /// Renders the [`TileMap`] to the screen.
 pub(crate) fn render(
-    map: Res<TileMap>,
+    map: Res<Map>,
     mut bterm: ResMut<BTerm>,
     player_query: Query<&PlayerPosition>,
 ) {
@@ -40,22 +40,22 @@ pub(crate) fn render(
             let mut fg;
             let mut bg;
             match tile {
-                TileType::Wall => {
+                Tile::Wall => {
                     fg = RGB::from_u8(179, 179, 179);
                     bg = RGB::from_u8(69, 69, 69);
                     glyph = '#' as u16;
                 }
-                TileType::Floor => {
+                Tile::Floor => {
                     fg = RGB::from_u8(179, 118, 112);
                     bg = RGB::from_u8(31, 23, 23);
                     glyph = '.' as u16;
                 }
-                TileType::BrickPath => {
+                Tile::BrickPath => {
                     fg = RGB::from_u8(0, 0, 0);
                     bg = RGB::from_u8(217, 125, 72);
                     glyph = '.' as u16;
                 }
-                TileType::Grass => {
+                Tile::Grass => {
                     fg = RGB::from_u8(66, 245, 84);
                     bg = RGB::from_u8(63, 224, 79);
                     glyph = '.' as u16;

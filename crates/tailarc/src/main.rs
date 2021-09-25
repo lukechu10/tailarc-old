@@ -2,8 +2,8 @@
 
 mod gamelog;
 mod gui;
+mod map;
 mod render;
-mod tilemap;
 mod visibility;
 
 use std::collections::HashSet;
@@ -18,10 +18,10 @@ use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
 use bevy_log::info;
 use bracket_lib::prelude::*;
 use gamelog::GameLog;
-use tilemap::TileMap;
+use map::Map;
 use visibility::{visibility_system, Viewshed};
 
-use crate::tilemap::TileType;
+use crate::map::Tile;
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 60;
@@ -121,9 +121,7 @@ fn init(mut commands: Commands) {
     });
 
     // Tile map resource.
-    commands.insert_resource(
-        tilemap::TileMap::new(100, 100, true),
-    );
+    commands.insert_resource(map::Map::new(100, 100, true));
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
         entries: vec!["Welcome to Tailarc!".to_string()],
@@ -170,7 +168,7 @@ fn player_input(bterm: Res<BTerm>) -> (i32, i32) {
 /// Update player position
 fn update_player_position(
     In((delta_x, delta_y)): In<(i32, i32)>,
-    map: Res<TileMap>,
+    map: Res<Map>,
     mut game_log: ResMut<GameLog>,
     mut q: Query<(&mut PlayerPosition, &mut Viewshed), With<Player>>,
 ) {
@@ -184,8 +182,7 @@ fn update_player_position(
                 .max(0)
                 .min(map.height.saturating_sub(1) as i32);
 
-            if map.tiles[map.xy_idx(new_position.x as u32, new_position.y as u32)] != TileType::Wall
-            {
+            if map.tiles[map.xy_idx(new_position.x as u32, new_position.y as u32)] != Tile::Wall {
                 player_position.0 = new_position;
                 viewshed.dirty = true;
             } else {
