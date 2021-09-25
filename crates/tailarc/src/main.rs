@@ -24,7 +24,7 @@ use visibility::{visibility_system, Viewshed};
 use crate::tilemap::TileType;
 
 const CONSOLE_WIDTH: u32 = 80;
-const CONSOLE_HEIGHT: u32 = 45;
+const CONSOLE_HEIGHT: u32 = 60;
 
 #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 struct Position<C> {
@@ -105,8 +105,7 @@ fn init(mut commands: Commands) {
         viewshed: Viewshed {
             visible_tiles: HashSet::new(),
             // Range is the half the diagonal of the screen so that whole screen is visible.
-            range: f64::sqrt((CONSOLE_WIDTH / 2).pow(2) as f64 + (CONSOLE_HEIGHT / 2).pow(2) as f64)
-                as i32,
+            range: 8,
             dirty: true,
         },
         combat_stats: CombatStats {
@@ -123,8 +122,7 @@ fn init(mut commands: Commands) {
 
     // Tile map resource.
     commands.insert_resource(
-        tilemap::TileMap::new_from_ascii_file("static/levels/finlai.txt", false)
-            .expect("could not create level"),
+        tilemap::TileMap::new(100, 100, true),
     );
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
