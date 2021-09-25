@@ -138,17 +138,33 @@ fn init(mut commands: Commands) {
 fn player_input(bterm: Res<BTerm>) -> (i32, i32) {
     let mut delta_x = 0;
     let mut delta_y = 0;
-    if bterm.key == Some(VirtualKeyCode::Left) {
+    if bterm.key == Some(VirtualKeyCode::Left) || bterm.key == Some(VirtualKeyCode::H) {
         delta_x -= 1;
     }
-    if bterm.key == Some(VirtualKeyCode::Right) {
+    if bterm.key == Some(VirtualKeyCode::Right) || bterm.key == Some(VirtualKeyCode::L) {
         delta_x += 1;
     }
-    if bterm.key == Some(VirtualKeyCode::Up) {
+    if bterm.key == Some(VirtualKeyCode::Up) || bterm.key == Some(VirtualKeyCode::K) {
         delta_y -= 1;
     }
-    if bterm.key == Some(VirtualKeyCode::Down) {
+    if bterm.key == Some(VirtualKeyCode::Down) || bterm.key == Some(VirtualKeyCode::J) {
         delta_y += 1;
+    }
+    if bterm.key == Some(VirtualKeyCode::Y) {
+        delta_y -= 1;
+        delta_x -= 1;
+    }
+    if bterm.key == Some(VirtualKeyCode::U) {
+        delta_y -= 1;
+        delta_x += 1;
+    }
+    if bterm.key == Some(VirtualKeyCode::B) {
+        delta_y += 1;
+        delta_x -= 1;
+    }
+    if bterm.key == Some(VirtualKeyCode::N) {
+        delta_y += 1;
+        delta_x += 1;
     }
     (delta_x, delta_y)
 }
