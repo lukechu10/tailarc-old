@@ -2,8 +2,7 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 use rand::Rng;
 
-use crate::components::{BlocksTile, Renderable, Viewshed};
-use crate::{Monster, MonsterBundle, Position};
+use crate::components::{BlocksTile, Monster, MonsterBundle, Position, Renderable, Viewshed};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tile {

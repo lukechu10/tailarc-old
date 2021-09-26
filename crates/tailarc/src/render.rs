@@ -3,12 +3,12 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::Renderable;
+use crate::components::{Player, Position, Renderable};
 use crate::map::{Map, Tile};
-use crate::{Player, Position, CONSOLE_HEIGHT, CONSOLE_WIDTH};
+use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
 /// Renders the [`Map`] to the screen.
-pub(crate) fn render(
+pub fn render(
     map: Res<Map>,
     mut bterm: ResMut<BTerm>,
     renderables: Query<(&Renderable, &Position)>,

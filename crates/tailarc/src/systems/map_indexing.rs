@@ -1,8 +1,7 @@
 use bevy_ecs::prelude::*;
 
-use crate::components::BlocksTile;
+use crate::components::{BlocksTile, Position};
 use crate::map::Map;
-use crate::Position;
 
 pub fn map_indexing_system(mut map: ResMut<Map>, blocks_tile: Query<&Position, With<BlocksTile>>) {
     map.populate_blocked();

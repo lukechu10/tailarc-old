@@ -1,10 +1,11 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
+use crate::components::{CombatStats, Player};
 use crate::gamelog::GameLog;
-use crate::{CombatStats, Player, CONSOLE_HEIGHT, CONSOLE_WIDTH};
+use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
-pub(crate) fn render_ui_system(
+pub fn render_ui_system(
     mut bterm: ResMut<BTerm>,
     game_log: Res<GameLog>,
     player: Query<&CombatStats, With<Player>>,
