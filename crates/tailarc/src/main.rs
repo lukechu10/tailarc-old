@@ -1,10 +1,11 @@
 #![allow(clippy::type_complexity)]
 
-mod gamelog;
-mod gui;
-mod map;
-mod render;
-mod visibility;
+pub mod gamelog;
+pub mod gui;
+pub mod map;
+pub mod map_builders;
+pub mod render;
+pub mod visibility;
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -15,10 +16,11 @@ use bevy_core::CorePlugin;
 use bevy_ecs::bundle::Bundle;
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
-use bevy_log::info;
 use bracket_lib::prelude::*;
 use gamelog::GameLog;
 use map::Map;
+use render::Renderable;
+use tracing::info;
 use visibility::{visibility_system, Viewshed};
 
 use crate::map::Tile;
@@ -26,12 +28,14 @@ use crate::map::Tile;
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 60;
 
-#[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
-struct Position<C> {
-    x: C,
-    y: C,
+/// A component that gives an entity a position.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+struct Position {
+    x: i32,
+    y: i32,
 }
 
+/// Player entity.
 #[derive(Default)]
 struct Player;
 
@@ -43,27 +47,13 @@ struct CombatStats {
     power: i32,
 }
 
-#[derive(Default, Copy, Clone, PartialEq)]
-struct PlayerPosition(Position<i32>);
-
 #[derive(Bundle)]
 struct PlayerBundle {
     player: Player,
-    position: PlayerPosition,
+    position: Position,
+    renderable: Renderable,
     viewshed: Viewshed,
     combat_stats: CombatStats,
-}
-
-#[derive(Default)]
-struct Mouse;
-
-#[derive(Default, Copy, Clone, PartialEq)]
-struct MousePosition(Position<i32>);
-
-#[derive(Bundle)]
-struct MouseBundle {
-    mouse: Mouse,
-    position: MousePosition,
 }
 
 fn main() {
@@ -86,7 +76,6 @@ fn main() {
         .add_startup_system(init.system())
         .add_system(player_input.system().chain(update_player_position.system()))
         .add_system(visibility_system.system())
-        .add_system(mouse_input.system())
         .add_system(
             render::render
                 .system()
@@ -98,13 +87,17 @@ fn main() {
 fn init(mut commands: Commands) {
     commands.spawn_bundle(PlayerBundle {
         player: Player,
-        position: PlayerPosition(Position {
+        position: Position {
             x: (CONSOLE_WIDTH / 2) as i32,
             y: (CONSOLE_HEIGHT / 2) as i32,
-        }),
+        },
+        renderable: Renderable {
+            glyph: '@' as u16,
+            fg: RGB::named(YELLOW),
+            bg: RGB::named(BLACK),
+        },
         viewshed: Viewshed {
             visible_tiles: HashSet::new(),
-            // Range is the half the diagonal of the screen so that whole screen is visible.
             range: 8,
             dirty: true,
         },
@@ -115,13 +108,9 @@ fn init(mut commands: Commands) {
             power: 5,
         },
     });
-    commands.spawn_bundle(MouseBundle {
-        mouse: Mouse,
-        position: MousePosition(Position { x: 0, y: 0 }),
-    });
 
     // Tile map resource.
-    commands.insert_resource(map::Map::new(100, 100, true));
+    commands.insert_resource(map::Map::new_random(100, 100, true));
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
         entries: vec!["Welcome to Tailarc!".to_string()],
@@ -169,12 +158,11 @@ fn player_input(bterm: Res<BTerm>) -> (i32, i32) {
 fn update_player_position(
     In((delta_x, delta_y)): In<(i32, i32)>,
     map: Res<Map>,
-    mut game_log: ResMut<GameLog>,
-    mut q: Query<(&mut PlayerPosition, &mut Viewshed), With<Player>>,
+    mut q: Query<(&mut Position, &mut Viewshed), With<Player>>,
 ) {
     if (delta_x, delta_y) != (0, 0) {
         for (mut player_position, mut viewshed) in q.iter_mut() {
-            let mut new_position = player_position.0;
+            let mut new_position = *player_position;
             new_position.x = (new_position.x + delta_x)
                 .max(0)
                 .min(map.width.saturating_sub(1) as i32);
@@ -183,20 +171,9 @@ fn update_player_position(
                 .min(map.height.saturating_sub(1) as i32);
 
             if map.tiles[map.xy_idx(new_position.x as u32, new_position.y as u32)] != Tile::Wall {
-                player_position.0 = new_position;
+                *player_position = new_position;
                 viewshed.dirty = true;
-            } else {
-                game_log.entries.push("Cannot move into a wall".to_string());
             }
         }
-    }
-}
-
-/// Update mouse position.
-fn mouse_input(bterm: Res<BTerm>, mut q: Query<&mut MousePosition, With<Mouse>>) {
-    for mut mouse_position in q.iter_mut() {
-        let new_mouse_position = bterm.mouse_pos();
-        mouse_position.0.x = new_mouse_position.0;
-        mouse_position.0.y = new_mouse_position.1;
     }
 }

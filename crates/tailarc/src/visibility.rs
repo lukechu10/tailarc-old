@@ -4,7 +4,7 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::{field_of_view_set, Point};
 
 use crate::map::Map;
-use crate::PlayerPosition;
+use crate::Position;
 
 pub(crate) struct Viewshed {
     pub visible_tiles: HashSet<Point>,
@@ -12,15 +12,12 @@ pub(crate) struct Viewshed {
     pub dirty: bool,
 }
 
-pub(crate) fn visibility_system(
-    mut map: ResMut<Map>,
-    mut q: Query<(&mut Viewshed, &PlayerPosition)>,
-) {
+pub(crate) fn visibility_system(mut map: ResMut<Map>, mut q: Query<(&mut Viewshed, &Position)>) {
     for (mut viewshed, pos) in q.iter_mut() {
         if viewshed.dirty {
             viewshed.visible_tiles.clear();
             viewshed.visible_tiles =
-                field_of_view_set(Point::new(pos.0.x, pos.0.y), viewshed.range, &*map);
+                field_of_view_set(Point::new(pos.x, pos.y), viewshed.range, &*map);
             viewshed.visible_tiles.retain(|p| {
                 p.x >= 0 && p.x < map.width as i32 && p.y >= 0 && p.y < map.height as i32
             });

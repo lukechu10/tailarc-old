@@ -6,14 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.44"
 bevy_app = "0.5.0"
 bevy_bracket_lib = { path = "../bevy_bracket_lib" }
 bevy_core = "0.5.0"
 bevy_ecs = "0.5.0"
-bevy_log = "0.5.0"
 bracket-lib = "0.8.1"
 rand = "0.8.4"
+tracing = "0.1.28"
 tracing-subscriber = "0.2.24"
 
 [features]

@@ -4,13 +4,21 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
 use crate::map::{Map, Tile};
-use crate::{PlayerPosition, CONSOLE_HEIGHT, CONSOLE_WIDTH};
+use crate::{Player, Position, CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
-/// Renders the [`TileMap`] to the screen.
+/// A component that contains the data needed to render a tile.
+pub struct Renderable {
+    pub glyph: u16,
+    pub fg: RGB,
+    pub bg: RGB,
+}
+
+/// Renders the [`Map`] to the screen.
 pub(crate) fn render(
     map: Res<Map>,
     mut bterm: ResMut<BTerm>,
-    player_query: Query<&PlayerPosition>,
+    renderables: Query<(&Renderable, &Position)>,
+    player: Query<&Position, With<Player>>,
 ) {
     // Clear the screen.
     bterm.cls();
@@ -22,7 +30,7 @@ pub(crate) fn render(
     let console_width_for_map = CONSOLE_WIDTH;
     let console_height_for_map = CONSOLE_HEIGHT - 6;
 
-    let player_pos = player_query.single().unwrap();
+    let player_pos = player.single().unwrap();
     let player_screen_pos = (console_width_for_map / 2, console_height_for_map / 2);
 
     for ((tile, revealed), visible) in map
@@ -31,10 +39,6 @@ pub(crate) fn render(
         .zip(map.revealed_tiles.iter())
         .zip(map.visible_tiles.iter())
     {
-        // Calculate position of tile on screen (relative to position of player).
-        let x_pos = x - player_pos.0.x + player_screen_pos.0 as i32;
-        let y_pos = y - player_pos.0.y + player_screen_pos.1 as i32;
-
         if *revealed {
             let glyph;
             let mut fg;
@@ -71,6 +75,9 @@ pub(crate) fn render(
                     bg = RGB::named(BLACK);
                 }
             }
+            // Calculate position of tile on screen (relative to position of player).
+            let x_pos = x - player_pos.x + player_screen_pos.0 as i32;
+            let y_pos = y - player_pos.y + player_screen_pos.1 as i32;
             // We don't need to check if the tile is outside the screen because it is already
             // checked by the `.set` method.
             bterm.set(x_pos, y_pos, fg, bg, glyph);
@@ -93,12 +100,14 @@ pub(crate) fn render(
         RGB::named(BLACK),
     );
 
-    // Display player. Player is always at the center of the screen.
-    bterm.set(
-        player_screen_pos.0,
-        player_screen_pos.1,
-        (255, 255, 255),
-        (0, 0, 0),
-        '@' as u16,
-    );
+    // Draw renderables.
+    for (renderable, pos) in renderables.iter() {
+        bterm.set(
+            pos.x - player_pos.x + player_screen_pos.0 as i32,
+            pos.y - player_pos.y + player_screen_pos.1 as i32,
+            renderable.fg,
+            renderable.bg,
+            renderable.glyph,
+        );
+    }
 }

@@ -1,11 +1,8 @@
-use std::path::Path;
-
-use anyhow::{Context, Result};
 use bracket_lib::prelude::{Algorithm2D, BaseMap, Point};
 use rand::Rng;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum Tile {
+pub enum Tile {
     Wall,
     Floor,
     BrickPath,
@@ -13,7 +10,7 @@ pub(crate) enum Tile {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Map {
+pub struct Map {
     pub tiles: Vec<Tile>,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
@@ -23,7 +20,7 @@ pub(crate) struct Map {
 }
 
 impl Map {
-    pub fn new(width: u32, height: u32, show_non_visible: bool) -> Self {
+    pub fn new_random(width: u32, height: u32, show_non_visible: bool) -> Self {
         let tile_map_size = (width * height) as usize;
 
         let mut map = vec![Tile::Floor; tile_map_size];
