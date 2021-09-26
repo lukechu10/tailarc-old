@@ -11,11 +11,11 @@ pub mod systems;
 use std::collections::HashSet;
 use std::path::Path;
 
+use bevy_app::CoreStage;
 use bevy_bracket_lib::BracketLibPlugin;
 use bevy_core::CorePlugin;
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
-use tracing::info;
 
 /// Width of the console window.
 pub const CONSOLE_WIDTH: u32 = 80;
@@ -27,6 +27,9 @@ pub struct InputEvent;
 
 fn main() {
     tracing_subscriber::fmt::init();
+
+    /// Label for our rendering stage.
+    static RENDER_STAGE: &str = "render";
 
     let font_path = Path::new("static/terminal_8x8.png");
     let font_path = font_path.canonicalize().unwrap();
@@ -41,28 +44,37 @@ fn main() {
 
     bevy_app::App::build()
         .add_plugin(CorePlugin::default())
+        .add_stage_after(
+            CoreStage::Update,
+            RENDER_STAGE,
+            SystemStage::single_threaded(),
+        )
         .add_plugin(BracketLibPlugin::new(bterm))
         .add_event::<InputEvent>()
         .add_startup_system(init.system())
+        // Handle input first. Input is what triggers the game to update.
         .add_system(
             systems::input::player_input_system
                 .system()
                 .chain(systems::input::update_player_position_system.system())
                 .label("input"),
         )
+        // Run indexing systems after input to ensure that state is in sync.
         .add_system_set(
             SystemSet::new()
-                .after("input")
-                .label("update state")
                 .with_system(systems::visibility::visibility_system.system())
-                .with_system(systems::map_indexing::map_indexing_system.system()),
+                .with_system(systems::map_indexing::map_indexing_system.system())
+                .label("indexing")
+                .after("input"),
         )
+        // Run the rest of the game systems.
         .add_system(
             systems::monster_ai::monster_ai_system
                 .system()
-                .after("update state"),
+                .after("indexing"),
         )
-        .add_system(
+        .add_system_to_stage(
+            RENDER_STAGE,
             render::render
                 .system()
                 .chain(gui::render_ui_system.system()),
@@ -105,5 +117,5 @@ fn init(mut commands: Commands) {
         entries: vec!["Welcome to Tailarc!".to_string()],
     });
 
-    info!("Finished initialization");
+    tracing::info!("Finished initialization");
 }

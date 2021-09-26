@@ -2,7 +2,7 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 use rand::Rng;
 
-use crate::components::{BlocksTile, Monster, MonsterBundle, Position, Renderable, Viewshed};
+use crate::components::{BlocksTile, CombatStats, Monster, MonsterBundle, Position, Renderable, Viewshed};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tile {
@@ -67,6 +67,12 @@ impl Map {
                 },
                 viewshed: Viewshed::new(8),
                 blocks_tile: BlocksTile,
+                combat_stats: CombatStats {
+                    max_hp: 16,
+                    hp: 16,
+                    defense: 1,
+                    power: 4,
+                },
             });
         }
 

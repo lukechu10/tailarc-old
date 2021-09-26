@@ -69,4 +69,5 @@ pub struct MonsterBundle {
     pub renderable: Renderable,
     pub viewshed: Viewshed,
     pub blocks_tile: BlocksTile,
+    pub combat_stats: CombatStats,
 }
