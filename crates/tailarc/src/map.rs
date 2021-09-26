@@ -2,7 +2,9 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 use rand::Rng;
 
-use crate::components::{BlocksTile, CombatStats, Monster, MonsterBundle, Position, Renderable, Viewshed};
+use crate::components::{
+    BlocksTile, CombatStats, Monster, MonsterBundle, Position, Renderable, Viewshed,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tile {
@@ -12,24 +14,33 @@ pub enum Tile {
     Grass,
 }
 
+/// Represents a single tile of the map and its properties.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Map {
+    /// A vec of [`Tile`]s.
     pub tiles: Vec<Tile>,
+    /// Tiles that have been seen by the player but not necessarily inside FOV.
+    ///
+    /// Updated in [`visibility`](crate::systems::visibility) system.
     pub revealed_tiles: Vec<bool>,
+    /// Tiles that are visible to the player (inside FOV).
+    ///
+    /// Updated in [`visibility`](crate::systems::visibility) system.
     pub visible_tiles: Vec<bool>,
+    /// An index of what is in each tile.
+    pub tile_content: Vec<Vec<Entity>>,
+    /// Tiles that are blocked (e.g. walls, monsters, etc...).
+    ///
+    /// Updated in [`map_indexing`](crate::systems::map_indexing) system.
     pub blocked: Vec<bool>,
-    pub show_non_visible: bool,
+    /// Width of the tile map.
     pub width: u32,
+    /// Height of the tile map.
     pub height: u32,
 }
 
 impl Map {
-    pub fn new_random(
-        width: u32,
-        height: u32,
-        show_non_visible: bool,
-        commands: &mut Commands,
-    ) -> Self {
+    pub fn new_random(width: u32, height: u32, commands: &mut Commands) -> Self {
         let tile_map_size = (width * height) as usize;
 
         let mut map = vec![Tile::Floor; tile_map_size];
@@ -80,8 +91,8 @@ impl Map {
             tiles: map,
             revealed_tiles: vec![false; tile_map_size],
             visible_tiles: vec![false; tile_map_size],
+            tile_content: vec![Vec::new(); tile_map_size],
             blocked: vec![false; tile_map_size],
-            show_non_visible,
             width,
             height,
         }
@@ -99,6 +110,12 @@ impl Map {
 
     pub fn xy_idx_with_width(x: u32, y: u32, width: u32) -> usize {
         (y as usize * width as usize) + x as usize
+    }
+
+    pub fn clear_content_index(&mut self) {
+        for content in self.tile_content.iter_mut() {
+            content.clear();
+        }
     }
 
     /// Returns true if the tile is within the map boundaries and is not blocked.

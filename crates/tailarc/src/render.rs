@@ -60,14 +60,8 @@ pub fn render(
                 }
             }
             if !*visible {
-                if map.show_non_visible {
-                    fg = fg.to_greyscale();
-                    bg = bg.to_greyscale();
-                } else {
-                    // Do not paint tile.
-                    fg = RGB::named(BLACK);
-                    bg = RGB::named(BLACK);
-                }
+                fg = fg.to_greyscale();
+                bg = bg.to_greyscale();
             }
             // Calculate position of tile on screen (relative to position of player).
             let x_pos = x - player_pos.x + player_screen_pos.0 as i32;
