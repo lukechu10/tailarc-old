@@ -3,15 +3,9 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
+use crate::components::Renderable;
 use crate::map::{Map, Tile};
 use crate::{Player, Position, CONSOLE_HEIGHT, CONSOLE_WIDTH};
-
-/// A component that contains the data needed to render a tile.
-pub struct Renderable {
-    pub glyph: u16,
-    pub fg: RGB,
-    pub bg: RGB,
-}
 
 /// Renders the [`Map`] to the screen.
 pub(crate) fn render(

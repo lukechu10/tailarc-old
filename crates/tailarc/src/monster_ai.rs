@@ -2,10 +2,10 @@ use bevy_app::EventReader;
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
+use crate::components::{Monster, Player, Position, Viewshed};
 use crate::gamelog::GameLog;
 use crate::map::Map;
-use crate::visibility::Viewshed;
-use crate::{InputEvent, Monster, Player, Position};
+use crate::InputEvent;
 
 pub fn monster_ai_system(
     mut input: EventReader<InputEvent>,

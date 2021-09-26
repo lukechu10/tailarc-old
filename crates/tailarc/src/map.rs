@@ -2,9 +2,7 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 use rand::Rng;
 
-use crate::components::BlocksTile;
-use crate::render::Renderable;
-use crate::visibility::Viewshed;
+use crate::components::{BlocksTile, Renderable, Viewshed};
 use crate::{Monster, MonsterBundle, Position};
 
 #[derive(Debug, Clone, Copy, PartialEq)]

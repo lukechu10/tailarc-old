@@ -16,7 +16,6 @@ use std::path::Path;
 use bevy_app::{App, EventWriter};
 use bevy_bracket_lib::BracketLibPlugin;
 use bevy_core::CorePlugin;
-use bevy_ecs::bundle::Bundle;
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
 use bracket_lib::prelude::*;
@@ -24,54 +23,14 @@ use components::*;
 use map::Map;
 use map_indexing::map_indexing_system;
 use monster_ai::monster_ai_system;
-use render::Renderable;
 use tracing::info;
-use visibility::{visibility_system, Viewshed};
+use visibility::visibility_system;
 
 pub const CONSOLE_WIDTH: u32 = 80;
 pub const CONSOLE_HEIGHT: u32 = 60;
 
 /// Event that is emitted when input is received.
 pub struct InputEvent;
-
-/// A component that gives an entity a position.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Position {
-    x: i32,
-    y: i32,
-}
-
-/// Player entity.
-pub struct Player;
-
-#[derive(Clone, PartialEq)]
-pub struct CombatStats {
-    hp: i32,
-    max_hp: i32,
-    defense: i32,
-    power: i32,
-}
-
-#[derive(Bundle)]
-pub struct PlayerBundle {
-    player: Player,
-    position: Position,
-    renderable: Renderable,
-    viewshed: Viewshed,
-    combat_stats: CombatStats,
-}
-
-/// Monster entity.
-pub struct Monster;
-
-#[derive(Bundle)]
-pub struct MonsterBundle {
-    monster: Monster,
-    position: Position,
-    renderable: Renderable,
-    viewshed: Viewshed,
-    blocks_tile: BlocksTile,
-}
 
 fn main() {
     tracing_subscriber::fmt::init();

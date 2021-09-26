@@ -1,26 +1,8 @@
-use std::collections::HashSet;
-
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::{field_of_view_set, Point};
 
+use crate::components::{Player, Position, Viewshed};
 use crate::map::Map;
-use crate::{Player, Position};
-
-pub struct Viewshed {
-    pub visible_tiles: HashSet<Point>,
-    pub range: i32,
-    pub dirty: bool,
-}
-
-impl Viewshed {
-    pub fn new(range: i32) -> Self {
-        Self {
-            visible_tiles: HashSet::new(),
-            range,
-            dirty: true,
-        }
-    }
-}
 
 pub fn visibility_system(
     mut map: ResMut<Map>,
