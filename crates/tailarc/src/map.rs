@@ -4,7 +4,7 @@ use rand::Rng;
 
 use crate::render::Renderable;
 use crate::visibility::Viewshed;
-use crate::{MonsterBundle, Position};
+use crate::{Monster, MonsterBundle, Position};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tile {
@@ -59,6 +59,7 @@ impl Map {
             let x = rng.gen_range(1..width - 1) as i32;
             let y = rng.gen_range(1..height - 1) as i32;
             commands.spawn_bundle(MonsterBundle {
+                monster: Monster,
                 position: Position { x, y },
                 renderable: Renderable {
                     glyph: 'g' as u16,

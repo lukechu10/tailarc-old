@@ -4,13 +4,14 @@ pub mod gamelog;
 pub mod gui;
 pub mod map;
 pub mod map_builders;
+pub mod monster_ai;
 pub mod render;
 pub mod visibility;
 
 use std::collections::HashSet;
 use std::path::Path;
 
-use bevy_app::App;
+use bevy_app::{App, EventWriter};
 use bevy_bracket_lib::BracketLibPlugin;
 use bevy_core::CorePlugin;
 use bevy_ecs::bundle::Bundle;
@@ -18,12 +19,16 @@ use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
 use bracket_lib::prelude::*;
 use map::{Map, Tile};
+use monster_ai::monster_ai_system;
 use render::Renderable;
 use tracing::info;
 use visibility::{visibility_system, Viewshed};
 
 pub const CONSOLE_WIDTH: u32 = 80;
 pub const CONSOLE_HEIGHT: u32 = 60;
+
+/// Event that is emitted when input is received.
+pub struct InputEvent;
 
 /// A component that gives an entity a position.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
@@ -33,7 +38,6 @@ pub struct Position {
 }
 
 /// Player entity.
-#[derive(Default)]
 pub struct Player;
 
 #[derive(Clone, PartialEq)]
@@ -53,8 +57,12 @@ pub struct PlayerBundle {
     combat_stats: CombatStats,
 }
 
+/// Monster entity.
+pub struct Monster;
+
 #[derive(Bundle)]
 pub struct MonsterBundle {
+    monster: Monster,
     position: Position,
     renderable: Renderable,
     viewshed: Viewshed,
@@ -77,9 +85,16 @@ fn main() {
     App::build()
         .add_plugin(CorePlugin::default())
         .add_plugin(BracketLibPlugin::new(bterm))
+        .add_event::<InputEvent>()
         .add_startup_system(init.system())
-        .add_system(player_input.system().chain(update_player_position.system()))
+        .add_system(
+            player_input
+                .system()
+                .chain(update_player_position.system())
+                .label("input"),
+        )
         .add_system(visibility_system.system())
+        .add_system(monster_ai_system.system())
         .add_system(
             render::render
                 .system()
@@ -163,6 +178,7 @@ fn player_input(bterm: Res<BTerm>) -> (i32, i32) {
 fn update_player_position(
     In((delta_x, delta_y)): In<(i32, i32)>,
     map: Res<Map>,
+    mut input: EventWriter<InputEvent>,
     mut q: Query<(&mut Position, &mut Viewshed), With<Player>>,
 ) {
     if (delta_x, delta_y) != (0, 0) {
@@ -178,6 +194,7 @@ fn update_player_position(
             if map.tiles[map.xy_idx(new_position.x as u32, new_position.y as u32)] != Tile::Wall {
                 *player_position = new_position;
                 viewshed.dirty = true;
+                input.send(InputEvent);
             }
         }
     }
