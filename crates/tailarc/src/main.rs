@@ -1,9 +1,11 @@
 #![allow(clippy::type_complexity)]
 
+pub mod components;
 pub mod gamelog;
 pub mod gui;
 pub mod map;
 pub mod map_builders;
+pub mod map_indexing;
 pub mod monster_ai;
 pub mod render;
 pub mod visibility;
@@ -18,7 +20,9 @@ use bevy_ecs::bundle::Bundle;
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
 use bracket_lib::prelude::*;
-use map::{Map, Tile};
+use components::*;
+use map::Map;
+use map_indexing::map_indexing_system;
 use monster_ai::monster_ai_system;
 use render::Renderable;
 use tracing::info;
@@ -66,6 +70,7 @@ pub struct MonsterBundle {
     position: Position,
     renderable: Renderable,
     viewshed: Viewshed,
+    blocks_tile: BlocksTile,
 }
 
 fn main() {
@@ -93,8 +98,14 @@ fn main() {
                 .chain(update_player_position.system())
                 .label("input"),
         )
-        .add_system(visibility_system.system())
-        .add_system(monster_ai_system.system())
+        .add_system_set(
+            SystemSet::new()
+                .after("input")
+                .label("update state")
+                .with_system(visibility_system.system())
+                .with_system(map_indexing_system.system()),
+        )
+        .add_system(monster_ai_system.system().after("update state"))
         .add_system(
             render::render
                 .system()
@@ -191,7 +202,7 @@ fn update_player_position(
                 .max(0)
                 .min(map.height.saturating_sub(1) as i32);
 
-            if map.tiles[map.xy_idx(new_position.x as u32, new_position.y as u32)] != Tile::Wall {
+            if !map.blocked[map.xy_idx(new_position.x as u32, new_position.y as u32)] {
                 *player_position = new_position;
                 viewshed.dirty = true;
                 input.send(InputEvent);

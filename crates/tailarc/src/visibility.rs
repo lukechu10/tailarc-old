@@ -24,9 +24,9 @@ impl Viewshed {
 
 pub fn visibility_system(
     mut map: ResMut<Map>,
-    mut q: Query<(&mut Viewshed, &Position), With<Player>>,
+    mut q: Query<(&mut Viewshed, &Position, Option<&Player>)>,
 ) {
-    for (mut viewshed, pos) in q.iter_mut() {
+    for (mut viewshed, pos, player) in q.iter_mut() {
         if viewshed.dirty {
             viewshed.visible_tiles.clear();
             viewshed.visible_tiles =
@@ -36,11 +36,13 @@ pub fn visibility_system(
             });
 
             // Reveal what the player can see.
-            map.visible_tiles.fill(false);
-            for pos in &viewshed.visible_tiles {
-                let idx = map.xy_idx(pos.x as u32, pos.y as u32);
-                map.revealed_tiles[idx] = true;
-                map.visible_tiles[idx] = true;
+            if player.is_some() {
+                map.visible_tiles.fill(false);
+                for pos in &viewshed.visible_tiles {
+                    let idx = map.xy_idx(pos.x as u32, pos.y as u32);
+                    map.revealed_tiles[idx] = true;
+                    map.visible_tiles[idx] = true;
+                }
             }
 
             viewshed.dirty = false;

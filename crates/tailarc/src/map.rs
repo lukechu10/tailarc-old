@@ -2,6 +2,7 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 use rand::Rng;
 
+use crate::components::BlocksTile;
 use crate::render::Renderable;
 use crate::visibility::Viewshed;
 use crate::{Monster, MonsterBundle, Position};
@@ -19,6 +20,7 @@ pub struct Map {
     pub tiles: Vec<Tile>,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
+    pub blocked: Vec<bool>,
     pub show_non_visible: bool,
     pub width: u32,
     pub height: u32,
@@ -67,6 +69,7 @@ impl Map {
                     bg: RGB::named(BLACK),
                 },
                 viewshed: Viewshed::new(8),
+                blocks_tile: BlocksTile,
             });
         }
 
@@ -74,9 +77,16 @@ impl Map {
             tiles: map,
             revealed_tiles: vec![false; tile_map_size],
             visible_tiles: vec![false; tile_map_size],
+            blocked: vec![false; tile_map_size],
             show_non_visible,
             width,
             height,
+        }
+    }
+
+    pub fn populate_blocked(&mut self) {
+        for (i, &tile) in self.tiles.iter().enumerate() {
+            self.blocked[i] = tile == Tile::Wall;
         }
     }
 
@@ -86,6 +96,15 @@ impl Map {
 
     pub fn xy_idx_with_width(x: u32, y: u32, width: u32) -> usize {
         (y as usize * width as usize) + x as usize
+    }
+
+    /// Returns true if the tile is within the map boundaries and is not blocked.
+    fn is_exit_valid(&self, x: i32, y: i32) -> bool {
+        if x < 1 || x > self.width as i32 - 1 || y < 1 || y > self.height as i32 - 1 {
+            return false;
+        }
+        let idx = self.xy_idx(x as u32, y as u32);
+        !self.blocked[idx]
     }
 }
 
@@ -98,5 +117,35 @@ impl Algorithm2D for Map {
 impl BaseMap for Map {
     fn is_opaque(&self, idx: usize) -> bool {
         matches!(self.tiles[idx], Tile::Wall)
+    }
+
+    fn get_available_exits(&self, idx: usize) -> SmallVec<[(usize, f32); 10]> {
+        let mut exits = SmallVec::new();
+        let x = idx as i32 % self.width as i32;
+        let y = idx as i32 / self.width as i32;
+        let w = self.width as usize;
+
+        // Cardinal directions
+        if self.is_exit_valid(x - 1, y) {
+            exits.push((idx - 1, 1.0));
+        }
+        if self.is_exit_valid(x + 1, y) {
+            exits.push((idx + 1, 1.0));
+        }
+        if self.is_exit_valid(x, y - 1) {
+            exits.push((idx - w, 1.0));
+        }
+        if self.is_exit_valid(x, y + 1) {
+            exits.push((idx + w, 1.0))
+        };
+
+        exits
+    }
+
+    fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
+        let w = self.width as usize;
+        let p1 = Point::new(idx1 % w, idx1 / w);
+        let p2 = Point::new(idx2 % w, idx2 / w);
+        DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 }
