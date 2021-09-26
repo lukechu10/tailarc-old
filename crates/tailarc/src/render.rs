@@ -102,12 +102,16 @@ pub(crate) fn render(
 
     // Draw renderables.
     for (renderable, pos) in renderables.iter() {
-        bterm.set(
-            pos.x - player_pos.x + player_screen_pos.0 as i32,
-            pos.y - player_pos.y + player_screen_pos.1 as i32,
-            renderable.fg,
-            renderable.bg,
-            renderable.glyph,
-        );
+        let idx = map.xy_idx(pos.x as u32, pos.y as u32);
+        // Only draw if the tile is visible.
+        if map.visible_tiles[idx] {
+            bterm.set(
+                pos.x - player_pos.x + player_screen_pos.0 as i32,
+                pos.y - player_pos.y + player_screen_pos.1 as i32,
+                renderable.fg,
+                renderable.bg,
+                renderable.glyph,
+            );
+        }
     }
 }

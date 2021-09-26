@@ -1,5 +1,10 @@
-use bracket_lib::prelude::{Algorithm2D, BaseMap, Point};
+use bevy_ecs::prelude::*;
+use bracket_lib::prelude::*;
 use rand::Rng;
+
+use crate::render::Renderable;
+use crate::visibility::Viewshed;
+use crate::{MonsterBundle, Position};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tile {
@@ -20,7 +25,12 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn new_random(width: u32, height: u32, show_non_visible: bool) -> Self {
+    pub fn new_random(
+        width: u32,
+        height: u32,
+        show_non_visible: bool,
+        commands: &mut Commands,
+    ) -> Self {
         let tile_map_size = (width * height) as usize;
 
         let mut map = vec![Tile::Floor; tile_map_size];
@@ -42,6 +52,21 @@ impl Map {
             let y = rng.gen_range(1..height - 1);
             let idx = Self::xy_idx_with_width(x, y, width);
             map[idx] = Tile::Wall;
+        }
+
+        // Place some random monsters.
+        for _i in 0..50 {
+            let x = rng.gen_range(1..width - 1) as i32;
+            let y = rng.gen_range(1..height - 1) as i32;
+            commands.spawn_bundle(MonsterBundle {
+                position: Position { x, y },
+                renderable: Renderable {
+                    glyph: 'g' as u16,
+                    fg: RGB::named(RED),
+                    bg: RGB::named(BLACK),
+                },
+                viewshed: Viewshed::new(8),
+            });
         }
 
         Self {

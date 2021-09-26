@@ -17,30 +17,27 @@ use bevy_ecs::bundle::Bundle;
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::{Commands, IntoSystem, Query, Res};
 use bracket_lib::prelude::*;
-use gamelog::GameLog;
-use map::Map;
+use map::{Map, Tile};
 use render::Renderable;
 use tracing::info;
 use visibility::{visibility_system, Viewshed};
 
-use crate::map::Tile;
-
-const CONSOLE_WIDTH: u32 = 80;
-const CONSOLE_HEIGHT: u32 = 60;
+pub const CONSOLE_WIDTH: u32 = 80;
+pub const CONSOLE_HEIGHT: u32 = 60;
 
 /// A component that gives an entity a position.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-struct Position {
+pub struct Position {
     x: i32,
     y: i32,
 }
 
 /// Player entity.
 #[derive(Default)]
-struct Player;
+pub struct Player;
 
 #[derive(Clone, PartialEq)]
-struct CombatStats {
+pub struct CombatStats {
     hp: i32,
     max_hp: i32,
     defense: i32,
@@ -48,12 +45,19 @@ struct CombatStats {
 }
 
 #[derive(Bundle)]
-struct PlayerBundle {
+pub struct PlayerBundle {
     player: Player,
     position: Position,
     renderable: Renderable,
     viewshed: Viewshed,
     combat_stats: CombatStats,
+}
+
+#[derive(Bundle)]
+pub struct MonsterBundle {
+    position: Position,
+    renderable: Renderable,
+    viewshed: Viewshed,
 }
 
 fn main() {
@@ -110,7 +114,8 @@ fn init(mut commands: Commands) {
     });
 
     // Tile map resource.
-    commands.insert_resource(map::Map::new_random(100, 100, true));
+    let map = Map::new_random(100, 100, true, &mut commands);
+    commands.insert_resource(map);
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
         entries: vec!["Welcome to Tailarc!".to_string()],
