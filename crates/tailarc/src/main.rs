@@ -53,12 +53,7 @@ fn main() {
         .add_event::<InputEvent>()
         .add_startup_system(init.system())
         // Handle input first. Input is what triggers the game to update.
-        .add_system(
-            systems::input::player_input_system
-                .system()
-                .chain(systems::input::update_player_position_system.system())
-                .label("input"),
-        )
+        .add_system(systems::input::player_input_system.system().label("input"))
         // Run indexing systems after input to ensure that state is in sync.
         .add_system_set(
             SystemSet::new()
@@ -83,10 +78,15 @@ fn main() {
 }
 
 fn init(mut commands: Commands) {
-    use components::{CombatStats, Player, PlayerBundle, Position, Renderable, Viewshed};
+    use components::{
+        CombatStats, EntityName, Player, PlayerBundle, Position, Renderable, Viewshed,
+    };
 
     commands.spawn_bundle(PlayerBundle {
         player: Player,
+        name: EntityName {
+            name: "Player".to_string(),
+        },
         position: Position {
             x: (CONSOLE_WIDTH / 2) as i32,
             y: (CONSOLE_HEIGHT / 2) as i32,

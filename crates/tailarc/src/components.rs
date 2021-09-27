@@ -12,6 +12,11 @@ pub struct Position {
     pub y: i32,
 }
 
+/// A component that gives an entity a name.
+pub struct EntityName {
+    pub name: String,
+}
+
 /// A component that makes an entity block a tile (so that other entities can't pass through it).
 pub struct BlocksTile;
 
@@ -53,6 +58,7 @@ pub struct Player;
 #[derive(Bundle)]
 pub struct PlayerBundle {
     pub player: Player,
+    pub name: EntityName,
     pub position: Position,
     pub renderable: Renderable,
     pub viewshed: Viewshed,
@@ -65,6 +71,7 @@ pub struct Monster;
 #[derive(Bundle)]
 pub struct MonsterBundle {
     pub monster: Monster,
+    pub name: EntityName,
     pub position: Position,
     pub renderable: Renderable,
     pub viewshed: Viewshed,

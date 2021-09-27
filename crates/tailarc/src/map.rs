@@ -3,7 +3,7 @@ use bracket_lib::prelude::*;
 use rand::Rng;
 
 use crate::components::{
-    BlocksTile, CombatStats, Monster, MonsterBundle, Position, Renderable, Viewshed,
+    BlocksTile, CombatStats, EntityName, Monster, MonsterBundle, Position, Renderable, Viewshed,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -70,6 +70,9 @@ impl Map {
             let y = rng.gen_range(1..height - 1) as i32;
             commands.spawn_bundle(MonsterBundle {
                 monster: Monster,
+                name: EntityName {
+                    name: "Goblin".to_string(),
+                },
                 position: Position { x, y },
                 renderable: Renderable {
                     glyph: 'g' as u16,
@@ -112,8 +115,9 @@ impl Map {
         (y as usize * width as usize) + x as usize
     }
 
+    /// Clears the `tile_content` field.
     pub fn clear_content_index(&mut self) {
-        for content in self.tile_content.iter_mut() {
+        for content in &mut self.tile_content {
             content.clear();
         }
     }
