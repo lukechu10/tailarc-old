@@ -15,6 +15,7 @@ use bevy_app::CoreStage;
 use bevy_bracket_lib::BracketLibPlugin;
 use bevy_core::CorePlugin;
 use bevy_ecs::prelude::*;
+use bevy_ecs::schedule::ShouldRun;
 use bracket_lib::prelude::*;
 
 /// Width of the console window.
@@ -22,14 +23,25 @@ pub const CONSOLE_WIDTH: u32 = 80;
 /// Height of the console window.
 pub const CONSOLE_HEIGHT: u32 = 60;
 
-/// Event that is emitted when input is received.
-pub struct InputEvent;
+/// A resource that contains whether input has been received on the current frame.
+pub struct InputState {
+    has_input_on_frame: bool,
+}
+
+/// Only run if input has been received on the current frame.
+pub fn run_if_input(input_state: Res<InputState>) -> ShouldRun {
+    if input_state.has_input_on_frame {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
 
 fn main() {
-    tracing_subscriber::fmt::init();
-
-    /// Label for our rendering stage.
+    /// Label for our render stage.
     static RENDER_STAGE: &str = "render";
+
+    tracing_subscriber::fmt::init();
 
     let font_path = Path::new("static/terminal_8x8.png");
     let font_path = font_path.canonicalize().unwrap();
@@ -50,38 +62,45 @@ fn main() {
             SystemStage::single_threaded(),
         )
         .add_plugin(BracketLibPlugin::new(bterm))
-        .add_event::<InputEvent>()
+        // Initialization logic
         .add_startup_system(init.system())
         // Handle input first. Input is what triggers the game to update.
         .add_system(systems::input::player_input_system.system().label("input"))
         // Run indexing systems after input to ensure that state is in sync.
         .add_system_set(
             SystemSet::new()
-                .with_system(systems::visibility::visibility_system.system())
-                .with_system(systems::map_indexing::map_indexing_system.system())
+                .after("input")
                 .label("indexing")
-                .after("input"),
+                .with_run_criteria(run_if_input.system())
+                .with_system(systems::visibility::visibility_system.system())
+                .with_system(systems::map_indexing::map_indexing_system.system()),
         )
-        // Run the rest of the game systems.
+        // Run update systems
         .add_system(
             systems::monster_ai::monster_ai_system
                 .system()
-                .after("indexing"),
+                .after("indexing")
+                .with_run_criteria(run_if_input.system()),
         )
-        .add_system_to_stage(
+        // Rendering runs on the render stage after everything else.
+        .add_system_set_to_stage(
             RENDER_STAGE,
-            render::render
-                .system()
-                .chain(gui::render_ui_system.system()),
+            SystemSet::new().with_system(
+                render::render
+                    .system()
+                    .chain(gui::render_ui_system.system()),
+            ),
         )
         .run();
 }
 
+/// Initialization for entities and resources.
 fn init(mut commands: Commands) {
     use components::{
         CombatStats, EntityName, Player, PlayerBundle, Position, Renderable, Viewshed,
     };
 
+    // Spawn entities.
     commands.spawn_bundle(PlayerBundle {
         player: Player,
         name: EntityName {
@@ -109,12 +128,18 @@ fn init(mut commands: Commands) {
         },
     });
 
+    // Spawn resources.
+
     // Tile map resource.
     let map = map::Map::new_random(100, 100, &mut commands);
     commands.insert_resource(map);
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
         entries: vec!["Welcome to Tailarc!".to_string()],
+    });
+    // Input state resource.
+    commands.insert_resource(InputState {
+        has_input_on_frame: true,
     });
 
     tracing::info!("Finished initialization");

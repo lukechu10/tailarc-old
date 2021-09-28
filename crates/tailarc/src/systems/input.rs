@@ -1,20 +1,19 @@
-use bevy_app::EventWriter;
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
 use crate::components::{CombatStats, Monster, Player, Position, Viewshed};
 use crate::gamelog::GameLog;
 use crate::map::Map;
-use crate::InputEvent;
+use crate::InputState;
 
 /// Get and update player position from input.
 ///
-/// Emits the [`InputEvent`] if input is detected.
+/// Updates [`InputState`] appropriately depending on whether input was received.
 pub fn player_input_system(
     bterm: Res<BTerm>,
     map: Res<Map>,
     mut game_log: ResMut<GameLog>,
-    mut input: EventWriter<InputEvent>,
+    mut input_state: ResMut<InputState>,
     mut player: Query<(&mut Position, &mut Viewshed, &CombatStats), With<Player>>,
     enemies: Query<&CombatStats, With<Monster>>,
 ) {
@@ -51,8 +50,9 @@ pub fn player_input_system(
         delta_x += 1;
     }
 
-    // Try to update player position.
+    // If we have a delta, input has been received.
     if (delta_x, delta_y) != (0, 0) {
+        // Calculate the new position.
         let mut new_position = *player_pos;
         new_position.x = (new_position.x + delta_x)
             .max(0)
@@ -63,6 +63,7 @@ pub fn player_input_system(
 
         let idx = map.xy_idx(new_position.x as u32, new_position.y as u32);
 
+        // Check if the new position is blocked.
         if !map.blocked[idx] {
             *player_pos = new_position;
             viewshed.dirty = true;
@@ -80,6 +81,10 @@ pub fn player_input_system(
             }
         }
 
-        input.send(InputEvent);
+        input_state.has_input_on_frame = true;
+    }
+    // No input received.
+    else {
+        input_state.has_input_on_frame = false;
     }
 }
