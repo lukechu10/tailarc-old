@@ -23,6 +23,14 @@ pub const CONSOLE_WIDTH: u32 = 80;
 /// Height of the console window.
 pub const CONSOLE_HEIGHT: u32 = 60;
 
+/// A state that contains the current turn.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TurnState {
+    AwaitingInput,
+    Player,
+    Monster,
+}
+
 /// A resource that contains whether input has been received on the current frame.
 pub struct InputState {
     has_input_on_frame: bool,
@@ -95,6 +103,7 @@ fn main() {
             SystemStage::single_threaded(),
         )
         .add_plugin(BracketLibPlugin::new(bterm))
+        .add_state(TurnState::AwaitingInput)
         // Initialization logic
         .add_startup_system(init.system())
         // Handle input first. Input is what triggers the game to update.
