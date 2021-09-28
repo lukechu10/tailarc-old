@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{CombatStats, Monster, Player, Position, Viewshed};
+use crate::components::{CombatStats, Monster, Player, Position, Viewshed, WantsToMelee};
 use crate::gamelog::GameLog;
 use crate::map::Map;
 use crate::TurnState;
@@ -10,14 +10,15 @@ use crate::TurnState;
 ///
 /// Updates [`InputState`] appropriately depending on whether input was received.
 pub fn player_input_system(
+    mut commands: Commands,
     bterm: Res<BTerm>,
     map: Res<Map>,
     mut game_log: ResMut<GameLog>,
     mut turn_state: ResMut<TurnState>,
-    mut player: Query<(&mut Position, &mut Viewshed, &CombatStats), With<Player>>,
-    enemies: Query<&CombatStats, With<Monster>>,
+    mut player: Query<(Entity, &mut Position, &mut Viewshed, &CombatStats), With<Player>>,
+    enemies: Query<(Entity, &CombatStats), With<Monster>>,
 ) {
-    let (mut player_pos, mut viewshed, _combat_stats) = player.single_mut().unwrap();
+    let (player_entity, mut player_pos, mut viewshed, _combat_stats) = player.single_mut().unwrap();
 
     let mut delta_x = 0;
     let mut delta_y = 0;
@@ -72,15 +73,18 @@ pub fn player_input_system(
         else {
             for &potential_target in &map.tile_content[idx] {
                 let target = enemies.get(potential_target);
-                if let Ok(_target) = target {
+                if let Ok((target, _)) = target {
                     // Attack!
                     game_log
                         .entries
                         .push("From Hell's Heat, I stab thee!".to_string());
+                    commands
+                        .entity(player_entity)
+                        .insert(WantsToMelee { target });
                 }
             }
         }
 
-        *turn_state = TurnState::Player;
+        turn_state.advance_state();
     }
 }

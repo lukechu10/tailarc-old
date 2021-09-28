@@ -78,3 +78,12 @@ pub struct MonsterBundle {
     pub blocks_tile: BlocksTile,
     pub combat_stats: CombatStats,
 }
+
+/// A component that indicates that an entity wants to attack.
+pub struct WantsToMelee {
+    pub target: Entity,
+}
+
+pub struct SufferDamage {
+    pub amount: Vec<i32>,
+}

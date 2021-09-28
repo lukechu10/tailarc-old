@@ -31,14 +31,21 @@ pub enum TurnState {
     Monster,
 }
 
+impl TurnState {
+    pub fn advance_state(&mut self) {
+        *self = match *self {
+            TurnState::AwaitingInput => TurnState::Player,
+            // with input.
+            TurnState::Player => TurnState::Monster,
+            TurnState::Monster => TurnState::AwaitingInput,
+        }
+    }
+}
+
 pub fn next_turn_state_system(mut turn_state: ResMut<TurnState>) {
-    let next_state = match *turn_state {
-        TurnState::AwaitingInput => TurnState::AwaitingInput, /* AwaitingInput only advances */
-        // with input.
-        TurnState::Player => TurnState::Monster,
-        TurnState::Monster => TurnState::AwaitingInput,
-    };
-    *turn_state = next_state;
+    if *turn_state != TurnState::AwaitingInput {
+        turn_state.advance_state();
+    }
 }
 
 fn run_if_monster_turn(ts: Res<TurnState>) -> ShouldRun {
@@ -91,19 +98,27 @@ fn main() {
         // Initialization logic
         .add_startup_system(init.system())
         // Handle input first. Input is what triggers the game to update.
-        .add_system(systems::input::player_input_system.system())
+        .add_system(systems::input::player_input_system.system().label("input"))
         // Run indexing systems after input to ensure that state is in sync.
         .add_system_set(
             SystemSet::new()
+                .label("indexing")
+                .after("input")
                 .with_system(systems::visibility::visibility_system.system())
                 .with_system(systems::map_indexing::map_indexing_system.system()),
         )
-        // Run update systems
-        .add_system(
-            systems::monster_ai::monster_ai_system
-                .system()
+        // Run update systems after indexing to ensure that they are operating on consistent state.
+        .add_system_set(
+            SystemSet::new()
+                .label("update")
                 .after("indexing")
-                .with_run_criteria(run_if_monster_turn.system()),
+                .with_system(
+                    systems::monster_ai::monster_ai_system
+                        .system()
+                        .after("indexing")
+                        .with_run_criteria(run_if_monster_turn.system()),
+                )
+                .with_system(systems::melee_combat::melee_combat_system.system()),
         )
         // Rendering runs on the render stage after everything else.
         .add_system_set_to_stage(
