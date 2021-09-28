@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{Monster, Player, Position, Viewshed};
+use crate::components::{EntityName, Monster, Player, Position, Viewshed};
 use crate::gamelog::GameLog;
 use crate::map::Map;
 
@@ -10,12 +10,12 @@ pub fn monster_ai_system(
     mut game_log: ResMut<GameLog>,
     mut set: QuerySet<(
         Query<&Position, With<Player>>,
-        Query<(&mut Viewshed, &mut Position), With<Monster>>,
+        Query<(&mut Viewshed, &mut Position, &EntityName), With<Monster>>,
     )>,
 ) {
     let player_pos = *set.q0().single().unwrap();
 
-    for (mut viewshed, mut pos) in set.q1_mut().iter_mut() {
+    for (mut viewshed, mut pos, name) in set.q1_mut().iter_mut() {
         if viewshed
             .visible_tiles
             .contains(&Point::new(player_pos.x, player_pos.y))
@@ -26,7 +26,7 @@ pub fn monster_ai_system(
             );
             if distance < 1.5 {
                 // Attack goes here
-                game_log.entries.push("Monster shouts insults".to_string());
+                game_log.entries.push(format!("{} shouts insults", name.name));
                 return;
             }
             let path = a_star_search(
