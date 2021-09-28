@@ -26,7 +26,9 @@ pub fn monster_ai_system(
             );
             if distance < 1.5 {
                 // Attack goes here
-                game_log.entries.push(format!("{} shouts insults", name.name));
+                game_log
+                    .entries
+                    .push(format!("{} shouts insults", name.name));
                 return;
             }
             let path = a_star_search(

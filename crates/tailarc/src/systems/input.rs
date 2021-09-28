@@ -4,7 +4,7 @@ use bracket_lib::prelude::*;
 use crate::components::{CombatStats, Monster, Player, Position, Viewshed};
 use crate::gamelog::GameLog;
 use crate::map::Map;
-use crate::InputState;
+use crate::TurnState;
 
 /// Get and update player position from input.
 ///
@@ -13,7 +13,7 @@ pub fn player_input_system(
     bterm: Res<BTerm>,
     map: Res<Map>,
     mut game_log: ResMut<GameLog>,
-    mut input_state: ResMut<InputState>,
+    mut turn_state: ResMut<TurnState>,
     mut player: Query<(&mut Position, &mut Viewshed, &CombatStats), With<Player>>,
     enemies: Query<&CombatStats, With<Monster>>,
 ) {
@@ -81,10 +81,6 @@ pub fn player_input_system(
             }
         }
 
-        input_state.has_input_on_frame = true;
-    }
-    // No input received.
-    else {
-        input_state.has_input_on_frame = false;
+        *turn_state = TurnState::Player;
     }
 }

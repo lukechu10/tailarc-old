@@ -31,34 +31,18 @@ pub enum TurnState {
     Monster,
 }
 
-/// A resource that contains whether input has been received on the current frame.
-pub struct InputState {
-    has_input_on_frame: bool,
+pub fn next_turn_state_system(mut turn_state: ResMut<TurnState>) {
+    let next_state = match *turn_state {
+        TurnState::AwaitingInput => TurnState::AwaitingInput, /* AwaitingInput only advances */
+        // with input.
+        TurnState::Player => TurnState::Monster,
+        TurnState::Monster => TurnState::AwaitingInput,
+    };
+    *turn_state = next_state;
 }
 
-/// Only run if input has been received on the current frame.
-pub fn run_if_input(input_state: Res<InputState>) -> ShouldRun {
-    if input_state.has_input_on_frame {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
-}
-
-pub struct IsInitial(bool);
-
-impl Default for IsInitial {
-    fn default() -> Self {
-        IsInitial(true)
-    }
-}
-
-pub fn run_if_input_or_initial(
-    input_state: Res<InputState>,
-    mut is_initial: Local<IsInitial>,
-) -> ShouldRun {
-    if input_state.has_input_on_frame || is_initial.0 {
-        *is_initial = IsInitial(false);
+fn run_if_monster_turn(ts: Res<TurnState>) -> ShouldRun {
+    if *ts == TurnState::Monster {
         ShouldRun::Yes
     } else {
         ShouldRun::No
@@ -103,17 +87,14 @@ fn main() {
             SystemStage::single_threaded(),
         )
         .add_plugin(BracketLibPlugin::new(bterm))
-        .add_state(TurnState::AwaitingInput)
+        .insert_resource(TurnState::AwaitingInput)
         // Initialization logic
         .add_startup_system(init.system())
         // Handle input first. Input is what triggers the game to update.
-        .add_system(systems::input::player_input_system.system().label("input"))
+        .add_system(systems::input::player_input_system.system())
         // Run indexing systems after input to ensure that state is in sync.
         .add_system_set(
             SystemSet::new()
-                .after("input")
-                .label("indexing")
-                .with_run_criteria(run_if_input_or_initial.system())
                 .with_system(systems::visibility::visibility_system.system())
                 .with_system(systems::map_indexing::map_indexing_system.system()),
         )
@@ -122,16 +103,18 @@ fn main() {
             systems::monster_ai::monster_ai_system
                 .system()
                 .after("indexing")
-                .with_run_criteria(run_if_input.system()),
+                .with_run_criteria(run_if_monster_turn.system()),
         )
         // Rendering runs on the render stage after everything else.
         .add_system_set_to_stage(
             RENDER_STAGE,
-            SystemSet::new().with_system(
-                render::render
-                    .system()
-                    .chain(gui::render_ui_system.system()),
-            ),
+            SystemSet::new()
+                .with_system(
+                    render::render
+                        .system()
+                        .chain(gui::render_ui_system.system()),
+                )
+                .with_system(next_turn_state_system.system()),
         )
         .run();
 }
@@ -178,10 +161,6 @@ fn init(mut commands: Commands) {
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
         entries: vec!["Welcome to Tailarc!".to_string()],
-    });
-    // Input state resource.
-    commands.insert_resource(InputState {
-        has_input_on_frame: false,
     });
 
     tracing::info!("Finished initialization");
