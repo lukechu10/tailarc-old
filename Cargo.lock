@@ -1834,6 +1834,7 @@ dependencies = [
  "bevy_core",
  "bevy_ecs",
  "bracket-lib",
+ "console_error_panic_hook",
  "rand",
  "tracing",
  "tracing-subscriber",

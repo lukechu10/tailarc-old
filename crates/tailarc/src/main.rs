@@ -58,21 +58,33 @@ pub fn run_if_input_or_initial(
 }
 
 fn main() {
+    #[cfg(target_arch = "wasm32")]
+    console_error_panic_hook::set_once();
+
     /// Label for our render stage.
     static RENDER_STAGE: &str = "render";
 
     #[cfg(feature = "trace")]
     tracing_subscriber::fmt::init();
 
-    let font_path = Path::new("static/terminal_8x8.png");
-    let font_path = font_path.canonicalize().unwrap();
+    let mut bterm;
+    if cfg!(not(target_arch = "wasm32")) {
+        let font_path = Path::new("static/terminal_8x8.png");
+        let font_path = font_path.canonicalize().unwrap();
 
-    let mut bterm = BTermBuilder::new()
-        .with_simple_console(CONSOLE_WIDTH, CONSOLE_HEIGHT, font_path.to_str().unwrap())
-        .with_title("Tailarc")
-        .with_font(font_path.to_str().unwrap(), 8, 8)
-        .build()
-        .unwrap();
+        bterm = BTermBuilder::new()
+            .with_simple_console(CONSOLE_WIDTH, CONSOLE_HEIGHT, font_path.to_str().unwrap())
+            .with_title("Tailarc")
+            .with_font(font_path.to_str().unwrap(), 8, 8)
+            .build()
+            .unwrap();
+    } else {
+        bterm = BTermBuilder::simple(CONSOLE_WIDTH, CONSOLE_HEIGHT)
+            .unwrap()
+            .with_title("Tailarc")
+            .build()
+            .unwrap();
+    }
     bterm.with_post_scanlines(true);
 
     bevy_app::App::build()

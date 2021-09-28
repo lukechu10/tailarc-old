@@ -1,2 +1,5 @@
 [workspace]
 members = ["crates/*"]
+
+[profile.dev.package."*"]
+opt-level = 1

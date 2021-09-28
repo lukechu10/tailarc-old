@@ -11,6 +11,7 @@ bevy_bracket_lib = { path = "../bevy_bracket_lib" }
 bevy_core = "0.5.0"
 bevy_ecs = "0.5.0"
 bracket-lib = "0.8.1"
+console_error_panic_hook = "0.1.6"
 rand = "0.8.4"
 tracing = "0.1.28"
 tracing-subscriber = { version = "0.2.24", optional = true }
