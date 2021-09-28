@@ -37,10 +37,31 @@ pub fn run_if_input(input_state: Res<InputState>) -> ShouldRun {
     }
 }
 
+pub struct IsInitial(bool);
+
+impl Default for IsInitial {
+    fn default() -> Self {
+        IsInitial(true)
+    }
+}
+
+pub fn run_if_input_or_initial(
+    input_state: Res<InputState>,
+    mut is_initial: Local<IsInitial>,
+) -> ShouldRun {
+    if input_state.has_input_on_frame || is_initial.0 {
+        *is_initial = IsInitial(false);
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
 fn main() {
     /// Label for our render stage.
     static RENDER_STAGE: &str = "render";
 
+    #[cfg(feature = "trace")]
     tracing_subscriber::fmt::init();
 
     let font_path = Path::new("static/terminal_8x8.png");
@@ -71,7 +92,7 @@ fn main() {
             SystemSet::new()
                 .after("input")
                 .label("indexing")
-                .with_run_criteria(run_if_input.system())
+                .with_run_criteria(run_if_input_or_initial.system())
                 .with_system(systems::visibility::visibility_system.system())
                 .with_system(systems::map_indexing::map_indexing_system.system()),
         )
@@ -139,7 +160,7 @@ fn init(mut commands: Commands) {
     });
     // Input state resource.
     commands.insert_resource(InputState {
-        has_input_on_frame: true,
+        has_input_on_frame: false,
     });
 
     tracing::info!("Finished initialization");
