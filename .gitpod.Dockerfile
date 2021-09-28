@@ -4,3 +4,4 @@ RUN wget -qO- https://github.com/thedodd/trunk/releases/download/v0.14.0/trunk-x
 RUN sudo mv ./trunk /usr/bin/
 
 RUN rustup default nightly
+RUN rustup target add wasm32-unknown-unknown
