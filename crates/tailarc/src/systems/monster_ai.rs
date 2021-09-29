@@ -28,7 +28,7 @@ pub fn monster_ai_system(
                 commands.entity(entity).insert(WantsToMelee {
                     target: player_entity,
                 });
-                return;
+                continue;
             }
             let path = a_star_search(
                 map.xy_idx(pos.x as u32, pos.y as u32),
