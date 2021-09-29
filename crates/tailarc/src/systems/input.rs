@@ -2,7 +2,6 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
 use crate::components::{CombatStats, Monster, Player, Position, Viewshed, WantsToMelee};
-use crate::gamelog::GameLog;
 use crate::map::Map;
 use crate::TurnState;
 
@@ -13,7 +12,6 @@ pub fn player_input_system(
     mut commands: Commands,
     bterm: Res<BTerm>,
     map: Res<Map>,
-    mut game_log: ResMut<GameLog>,
     mut turn_state: ResMut<TurnState>,
     mut player: Query<(Entity, &mut Position, &mut Viewshed, &CombatStats), With<Player>>,
     enemies: Query<(Entity, &CombatStats), With<Monster>>,
@@ -75,9 +73,6 @@ pub fn player_input_system(
                 let target = enemies.get(potential_target);
                 if let Ok((target, _)) = target {
                     // Attack!
-                    game_log
-                        .entries
-                        .push("From Hell's Heat, I stab thee!".to_string());
                     commands
                         .entity(player_entity)
                         .insert(WantsToMelee { target });

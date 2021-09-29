@@ -91,7 +91,7 @@ pub struct SufferDamage {
 impl SufferDamage {
     pub fn new_damage(
         commands: &mut Commands,
-        mut query: Query<&mut SufferDamage>,
+        query: &mut Query<&mut SufferDamage>,
         entity: Entity,
         amount: i32,
     ) {

@@ -13,3 +13,11 @@ pub fn damage_system(
         commands.entity(entity).remove::<SufferDamage>();
     }
 }
+
+pub fn delete_the_dead(mut commands: Commands, q: Query<(Entity, &CombatStats)>) {
+    for (entity, stats) in q.iter() {
+        if stats.hp <= 0 {
+            commands.entity(entity).despawn();
+        }
+    }
+}

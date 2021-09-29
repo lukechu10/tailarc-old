@@ -118,7 +118,8 @@ fn main() {
                         .after("indexing")
                         .with_run_criteria(run_if_monster_turn.system()),
                 )
-                .with_system(systems::melee_combat::melee_combat_system.system()),
+                .with_system(systems::melee_combat::melee_combat_system.system())
+                .with_system(systems::damage::damage_system.system()),
         )
         // Rendering runs on the render stage after everything else.
         .add_system_set_to_stage(
@@ -129,7 +130,11 @@ fn main() {
                         .system()
                         .chain(gui::render_ui_system.system()),
                 )
-                .with_system(next_turn_state_system.system()),
+                // We can run these systems in parallel with rendering because they perform cleanup
+                // code for the tick. Commands are queued until next stage so render will
+                // still be consistent.
+                .with_system(next_turn_state_system.system())
+                .with_system(systems::damage::delete_the_dead.system()),
         )
         .run();
 }
