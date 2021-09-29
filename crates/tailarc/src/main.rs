@@ -10,6 +10,7 @@ pub mod systems;
 
 use std::collections::HashSet;
 use std::path::Path;
+use std::sync::Mutex;
 
 use bevy_app::CoreStage;
 use bevy_bracket_lib::BracketLibPlugin;
@@ -243,7 +244,7 @@ fn init(mut commands: Commands) {
     commands.insert_resource(map);
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
-        entries: vec!["Welcome to Tailarc!".to_string()],
+        entries: Mutex::new(vec!["Welcome to Tailarc!".to_string()]),
     });
 
     tracing::info!("Finished initialization");

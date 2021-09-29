@@ -17,13 +17,13 @@ pub fn damage_system(
 
 pub fn delete_the_dead(
     mut commands: Commands,
-    mut game_log: ResMut<GameLog>,
+    game_log: Res<GameLog>,
     q: Query<(Entity, &CombatStats, Option<&Player>)>,
 ) {
     for (entity, stats, player) in q.iter() {
         if stats.hp <= 0 {
             if player.is_some() {
-                game_log.entries.push("You died! :(".to_string());
+                game_log.add_entry("You died! :(".to_string());
             } else {
                 commands.entity(entity).despawn();
             }

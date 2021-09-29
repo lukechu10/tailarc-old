@@ -43,7 +43,7 @@ pub fn render_ui_system(
 
     // Draw game log.
     let mut y = CONSOLE_HEIGHT - 5;
-    for log in game_log.entries.iter().rev() {
+    for log in game_log.entries.lock().unwrap().iter().rev() {
         if y < CONSOLE_HEIGHT - 1 {
             bterm.print(2, y, log);
         }
