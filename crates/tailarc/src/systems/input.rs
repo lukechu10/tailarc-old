@@ -3,7 +3,7 @@ use bracket_lib::prelude::*;
 
 use crate::components::{CombatStats, Monster, Player, Position, Viewshed, WantsToMelee};
 use crate::map::Map;
-use crate::TurnState;
+use crate::RunState;
 
 /// Get and update player position from input.
 ///
@@ -12,7 +12,7 @@ pub fn player_input_system(
     mut commands: Commands,
     bterm: Res<BTerm>,
     map: Res<Map>,
-    mut turn_state: ResMut<TurnState>,
+    mut state: ResMut<State<RunState>>,
     mut player: Query<(Entity, &mut Position, &mut Viewshed, &CombatStats), With<Player>>,
     enemies: Query<(Entity, &CombatStats), With<Monster>>,
 ) {
@@ -80,6 +80,6 @@ pub fn player_input_system(
             }
         }
 
-        turn_state.advance_state();
+        RunState::advance_state(&mut state);
     }
 }

@@ -16,7 +16,6 @@ use bevy_app::CoreStage;
 use bevy_bracket_lib::BracketLibPlugin;
 use bevy_core::CorePlugin;
 use bevy_ecs::prelude::*;
-use bevy_ecs::schedule::ShouldRun;
 use bracket_lib::prelude::*;
 
 /// Width of the console window.
@@ -28,42 +27,28 @@ pub const CONSOLE_TITLE: &str = "Tailarc";
 
 /// A state that contains the current turn.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum TurnState {
+pub enum RunState {
     AwaitingInput,
     Player,
     Monster,
 }
 
-impl TurnState {
-    pub fn advance_state(&mut self) {
-        *self = match *self {
-            TurnState::AwaitingInput => TurnState::Player,
+impl RunState {
+    #[track_caller]
+    pub fn advance_state(state: &mut ResMut<State<Self>>) {
+        let next = match state.current() {
+            RunState::AwaitingInput => RunState::Player,
             // with input.
-            TurnState::Player => TurnState::Monster,
-            TurnState::Monster => TurnState::AwaitingInput,
-        }
+            RunState::Player => RunState::Monster,
+            RunState::Monster => RunState::AwaitingInput,
+        };
+        state.set(next).expect("could not advance state");
     }
 }
 
-pub fn next_turn_state_system(mut turn_state: ResMut<TurnState>) {
-    if *turn_state != TurnState::AwaitingInput {
-        turn_state.advance_state();
-    }
-}
-
-fn run_if_awaiting_input(ts: Res<TurnState>) -> ShouldRun {
-    if *ts == TurnState::AwaitingInput {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
-}
-
-fn run_if_monster_turn(ts: Res<TurnState>) -> ShouldRun {
-    if *ts == TurnState::Monster {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
+pub fn next_turn_state_system(mut state: ResMut<State<RunState>>) {
+    if *state.current() != RunState::AwaitingInput {
+        RunState::advance_state(&mut state);
     }
 }
 
@@ -140,16 +125,22 @@ fn main() {
             AppStages::Cleanup,
             SystemStage::parallel(),
         )
+        .add_state(RunState::AwaitingInput)
+        // Add RunState to all stages.
+        .add_system_set_to_stage(AppStages::MonsterTurn, State::<RunState>::get_driver())
+        .add_system_set_to_stage(AppStages::ApplyCombat, State::<RunState>::get_driver())
+        .add_system_set_to_stage(AppStages::ApplyDamage, State::<RunState>::get_driver())
+        .add_system_set_to_stage(AppStages::Cleanup, State::<RunState>::get_driver())
         .add_plugin(BracketLibPlugin::new(bterm))
-        .insert_resource(TurnState::AwaitingInput)
         // Initialization logic
         .add_startup_system(init.system())
         // Handle input first. Input is what triggers the game to update.
-        .add_system(
-            systems::input::player_input_system
-                .system()
-                .label(Label::Input)
-                .with_run_criteria(run_if_awaiting_input.system()),
+        .add_system_set(
+            SystemSet::on_update(RunState::AwaitingInput).with_system(
+                systems::input::player_input_system
+                    .system()
+                    .label(Label::Input),
+            ),
         )
         // Run indexing systems after input to ensure that state is in sync.
         // These don't need to be in a separate stage from CoreStage::Update because input doesn't
@@ -165,12 +156,8 @@ fn main() {
         // state.
         .add_system_set_to_stage(
             AppStages::MonsterTurn,
-            SystemSet::new().with_system(
-                systems::monster_ai::monster_ai_system
-                    .system()
-                    .with_run_criteria(run_if_monster_turn.system()), /* Only run if it's the
-                                                                       * monster's turn. */
-            ),
+            SystemSet::on_update(RunState::Monster)
+                .with_system(systems::monster_ai::monster_ai_system.system()),
         )
         // Run combat system to attach damage to victims.
         //
