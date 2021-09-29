@@ -87,3 +87,20 @@ pub struct WantsToMelee {
 pub struct SufferDamage {
     pub amount: Vec<i32>,
 }
+
+impl SufferDamage {
+    pub fn new_damage(
+        commands: &mut Commands,
+        mut query: Query<&mut SufferDamage>,
+        entity: Entity,
+        amount: i32,
+    ) {
+        if let Ok(mut suffer_damage) = query.get_mut(entity) {
+            suffer_damage.amount.push(amount);
+        } else {
+            commands.entity(entity).insert(SufferDamage {
+                amount: vec![amount],
+            });
+        }
+    }
+}

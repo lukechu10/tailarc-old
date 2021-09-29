@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::*;
 
-use crate::components::{CombatStats, EntityName, WantsToMelee};
+use crate::components::{CombatStats, EntityName, SufferDamage, WantsToMelee};
 use crate::gamelog::GameLog;
 
 pub fn melee_combat_system(
@@ -8,6 +8,7 @@ pub fn melee_combat_system(
     mut game_log: ResMut<GameLog>,
     wants_melee: Query<(Entity, &WantsToMelee, &EntityName, &CombatStats)>,
     target_stats: Query<(&CombatStats, &EntityName)>,
+    suffer_damage: Query<&mut SufferDamage>,
 ) {
     for (entity, wants_melee, name, stats) in wants_melee.iter() {
         let target = wants_melee.target;
@@ -25,6 +26,7 @@ pub fn melee_combat_system(
                     "{} hits {} for {} hp",
                     name.name, target_name.name, damage
                 ));
+                SufferDamage::new_damage(&mut commands, suffer_damage, entity, damage);
             }
         } else {
             game_log
