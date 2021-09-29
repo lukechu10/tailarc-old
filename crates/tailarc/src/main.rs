@@ -12,10 +12,11 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::sync::Mutex;
 
-use bevy_app::CoreStage;
+use bevy_app::{AppExit, CoreStage, EventWriter};
 use bevy_bracket_lib::BracketLibPlugin;
 use bevy_core::CorePlugin;
 use bevy_ecs::prelude::*;
+use bevy_ecs::schedule::ShouldRun;
 use bracket_lib::prelude::*;
 
 /// Width of the console window.
@@ -25,9 +26,9 @@ pub const CONSOLE_HEIGHT: u32 = 60;
 
 pub const CONSOLE_TITLE: &str = "Tailarc";
 
-/// A state that contains the current turn.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RunState {
+    MainMenu,
     AwaitingInput,
     Player,
     Monster,
@@ -37,18 +38,44 @@ impl RunState {
     #[track_caller]
     pub fn advance_state(state: &mut ResMut<State<Self>>) {
         let next = match state.current() {
-            RunState::AwaitingInput => RunState::Player,
-            // with input.
-            RunState::Player => RunState::Monster,
-            RunState::Monster => RunState::AwaitingInput,
+            RunState::MainMenu => None, // Main menu stays in main menu.
+            RunState::AwaitingInput => Some(RunState::Player),
+            RunState::Player => Some(RunState::Monster),
+            RunState::Monster => Some(RunState::AwaitingInput),
         };
-        state.set(next).expect("could not advance state");
+        if let Some(next) = next {
+            state.set(next).expect("could not advance state");
+        }
     }
 }
 
-pub fn next_turn_state_system(mut state: ResMut<State<RunState>>) {
+/// Advances the [`RunState`] to the next state (for the next tick).
+pub fn next_turn_state_system(
+    mut exit: EventWriter<AppExit>,
+    mut state: ResMut<State<RunState>>,
+    main_menu_result: Res<gui::MainMenuResult>,
+) {
+    if *state.current() == RunState::MainMenu {
+        if let gui::MainMenuResult::Selected { selected } = *main_menu_result {
+            match selected {
+                gui::MainMenuSelection::NewGame => state.set(RunState::AwaitingInput).unwrap(),
+                gui::MainMenuSelection::LoadGame => todo!("load state"),
+                gui::MainMenuSelection::Quit => exit.send(AppExit),
+            }
+        }
+    }
+
     if *state.current() != RunState::AwaitingInput {
         RunState::advance_state(&mut state);
+    }
+}
+
+/// Run criteria for only running when in game (all states except menu states).
+pub fn run_if_in_game(state: Res<State<RunState>>) -> ShouldRun {
+    if *state.current() != RunState::MainMenu {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
     }
 }
 
@@ -60,7 +87,9 @@ pub enum Label {
 
 /// All the world's a stage. And all the men and women merely players.
 ///
-/// All the stages defined here run after [`CoreStage::Update`].
+/// All the stages defined here run after [`CoreStage::Update`]. These stages are only used during
+/// the game. Other scenes such as main menu often have all their systems run in
+/// [`CoreStage::Update`].
 #[derive(StageLabel, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AppStages {
     /// Run monster AI.
@@ -73,7 +102,7 @@ pub enum AppStages {
     ///
     /// Entities that are dead are despawned.
     /// Game is rendered here so that it has access to latest state.
-    Cleanup,
+    CleanupAndRender,
 }
 
 fn main() {
@@ -122,15 +151,15 @@ fn main() {
         )
         .add_stage_after(
             AppStages::ApplyDamage,
-            AppStages::Cleanup,
+            AppStages::CleanupAndRender,
             SystemStage::parallel(),
         )
-        .add_state(RunState::AwaitingInput)
+        .add_state(RunState::MainMenu)
         // Add RunState to all stages.
         .add_system_set_to_stage(AppStages::MonsterTurn, State::<RunState>::get_driver())
         .add_system_set_to_stage(AppStages::ApplyCombat, State::<RunState>::get_driver())
         .add_system_set_to_stage(AppStages::ApplyDamage, State::<RunState>::get_driver())
-        .add_system_set_to_stage(AppStages::Cleanup, State::<RunState>::get_driver())
+        .add_system_set_to_stage(AppStages::CleanupAndRender, State::<RunState>::get_driver())
         .add_plugin(BracketLibPlugin::new(bterm))
         // Initialization logic
         .add_startup_system(init.system())
@@ -147,6 +176,7 @@ fn main() {
         // spawn new entities/components.
         .add_system_set(
             SystemSet::new()
+                .with_run_criteria(run_if_in_game.system())
                 .label(Label::Indexing)
                 .after(Label::Input)
                 .with_system(systems::visibility::visibility_system.system())
@@ -164,7 +194,9 @@ fn main() {
         // Monsters can add combat intention components which are handled in this stage.
         .add_system_set_to_stage(
             AppStages::ApplyCombat,
-            SystemSet::new().with_system(systems::melee_combat::melee_combat_system.system()),
+            SystemSet::new()
+                .with_run_criteria(run_if_in_game.system())
+                .with_system(systems::melee_combat::melee_combat_system.system()),
         )
         // Run damage system to apply damage from combat.
         //
@@ -175,19 +207,26 @@ fn main() {
             SystemSet::new().with_system(systems::damage::damage_system.system()),
         )
         // Rendering runs on the cleanup stage after everything else.
+        // Render the game.
         .add_system_set_to_stage(
-            AppStages::Cleanup,
+            AppStages::CleanupAndRender,
             SystemSet::new()
+                .with_run_criteria(run_if_in_game.system())
                 .with_system(
-                    render::render
+                    render::render_game_system
                         .system()
                         .chain(gui::render_ui_system.system()),
                 )
                 // We can run these systems in parallel with rendering because they perform cleanup
                 // code for the tick. Commands are queued until next stage so render will
                 // still be consistent.
-                .with_system(next_turn_state_system.system())
-                .with_system(systems::damage::delete_the_dead.system()),
+                .with_system(systems::damage::delete_the_dead.system())
+                .with_system(next_turn_state_system.system()),
+        )
+        .add_system_set_to_stage(
+            AppStages::CleanupAndRender,
+            SystemSet::on_update(RunState::MainMenu)
+                .with_system(render::render_main_menu_system.system()),
         )
         .run();
 }
@@ -234,6 +273,9 @@ fn init(mut commands: Commands) {
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
         entries: Mutex::new(vec!["Welcome to Tailarc!".to_string()]),
+    });
+    commands.insert_resource(gui::MainMenuResult::NoSelection {
+        selected: gui::MainMenuSelection::NewGame,
     });
 
     tracing::info!("Finished initialization");

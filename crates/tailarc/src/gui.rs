@@ -5,6 +5,19 @@ use crate::components::{CombatStats, Player};
 use crate::gamelog::GameLog;
 use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum MainMenuSelection {
+    NewGame,
+    LoadGame,
+    Quit,
+}
+
+pub enum MainMenuResult {
+    NoSelection { selected: MainMenuSelection },
+    Selected { selected: MainMenuSelection },
+}
+
+/// Render in game UI.
 pub fn render_ui_system(
     mut bterm: ResMut<BTerm>,
     game_log: Res<GameLog>,

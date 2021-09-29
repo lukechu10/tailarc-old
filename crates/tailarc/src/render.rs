@@ -8,7 +8,7 @@ use crate::map::{Map, Tile};
 use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
 /// Renders the [`Map`] to the screen.
-pub fn render(
+pub fn render_game_system(
     map: Res<Map>,
     mut bterm: ResMut<BTerm>,
     renderables: Query<(&Renderable, &Position)>,
@@ -102,4 +102,8 @@ pub fn render(
             );
         }
     }
+}
+
+pub fn render_main_menu_system(mut bterm: ResMut<BTerm>) {
+    bterm.print(10, 10, "Welcome to Tailarc!");
 }
