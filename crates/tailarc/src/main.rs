@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::sync::Mutex;
 
-use bevy_app::{AppExit, CoreStage, EventWriter};
+use bevy_app::CoreStage;
 use bevy_bracket_lib::BracketLibPlugin;
 use bevy_core::CorePlugin;
 use bevy_ecs::prelude::*;
@@ -44,14 +44,13 @@ impl RunState {
             RunState::Monster => Some(RunState::AwaitingInput),
         };
         if let Some(next) = next {
-            state.set(next).expect("could not advance state");
+            let _ = state.set(next);
         }
     }
 }
 
 /// Advances the [`RunState`] to the next state (for the next tick).
 pub fn next_turn_state_system(
-    mut exit: EventWriter<AppExit>,
     mut state: ResMut<State<RunState>>,
     main_menu_result: Res<gui::MainMenuResult>,
 ) {
@@ -60,7 +59,7 @@ pub fn next_turn_state_system(
             match selected {
                 gui::MainMenuSelection::NewGame => state.set(RunState::AwaitingInput).unwrap(),
                 gui::MainMenuSelection::LoadGame => todo!("load state"),
-                gui::MainMenuSelection::Quit => exit.send(AppExit),
+                gui::MainMenuSelection::Quit => std::process::exit(0),
             }
         }
     }
@@ -220,14 +219,15 @@ fn main() {
                 // We can run these systems in parallel with rendering because they perform cleanup
                 // code for the tick. Commands are queued until next stage so render will
                 // still be consistent.
-                .with_system(systems::damage::delete_the_dead.system())
-                .with_system(next_turn_state_system.system()),
+                .with_system(systems::damage::delete_the_dead.system()),
         )
         .add_system_set_to_stage(
             AppStages::CleanupAndRender,
             SystemSet::on_update(RunState::MainMenu)
                 .with_system(render::render_main_menu_system.system()),
         )
+        // Next turn always runs.
+        .add_system_to_stage(AppStages::CleanupAndRender, next_turn_state_system.system())
         .run();
 }
 
