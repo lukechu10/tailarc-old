@@ -65,13 +65,13 @@ impl Map {
         }
 
         // Place some random monsters.
-        for _i in 0..50 {
+        for i in 0..50 {
             let x = rng.gen_range(1..width - 1) as i32;
             let y = rng.gen_range(1..height - 1) as i32;
             commands.spawn_bundle(MonsterBundle {
                 monster: Monster,
                 name: EntityName {
-                    name: "Goblin".to_string(),
+                    name: format!("Goblin #{}", i),
                 },
                 position: Position { x, y },
                 renderable: Renderable {
