@@ -24,6 +24,8 @@ pub const CONSOLE_WIDTH: u32 = 80;
 /// Height of the console window.
 pub const CONSOLE_HEIGHT: u32 = 60;
 
+pub const CONSOLE_TITLE: &str = "Tailarc";
+
 /// A state that contains the current turn.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TurnState {
@@ -103,14 +105,14 @@ fn main() {
 
         bterm = BTermBuilder::new()
             .with_simple_console(CONSOLE_WIDTH, CONSOLE_HEIGHT, font_path.to_str().unwrap())
-            .with_title("Tailarc")
+            .with_title(CONSOLE_TITLE)
             .with_font(font_path.to_str().unwrap(), 8, 8)
             .build()
             .unwrap();
     } else {
         bterm = BTermBuilder::simple(CONSOLE_WIDTH, CONSOLE_HEIGHT)
             .unwrap()
-            .with_title("Tailarc")
+            .with_title(CONSOLE_TITLE)
             .build()
             .unwrap();
     }

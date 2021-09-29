@@ -13,9 +13,9 @@ pub fn render_ui_system(
     // Draw ui box.
     bterm.draw_box_double(
         0,
-        CONSOLE_HEIGHT - 6,
+        CONSOLE_HEIGHT - 7,
         CONSOLE_WIDTH - 1,
-        5,
+        6,
         RGB::named(WHITE),
         RGB::named(BLACK),
     );
@@ -26,14 +26,14 @@ pub fn render_ui_system(
     let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
     bterm.print_color(
         2,
-        CONSOLE_HEIGHT - 6,
+        CONSOLE_HEIGHT - 7,
         RGB::named(YELLOW),
         RGB::named(BLACK),
         &health,
     );
     bterm.draw_bar_horizontal(
         20,
-        CONSOLE_HEIGHT - 6,
+        CONSOLE_HEIGHT - 7,
         50,
         stats.hp,
         stats.max_hp,
@@ -42,7 +42,7 @@ pub fn render_ui_system(
     );
 
     // Draw game log.
-    let mut y = CONSOLE_HEIGHT - 5;
+    let mut y = CONSOLE_HEIGHT - 6;
     for log in game_log.entries.lock().unwrap().iter().rev() {
         if y < CONSOLE_HEIGHT - 1 {
             bterm.print(2, y, log);
