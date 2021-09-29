@@ -1,21 +1,20 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{EntityName, Monster, Player, Position, Viewshed};
-use crate::gamelog::GameLog;
+use crate::components::{EntityName, Monster, Player, Position, Viewshed, WantsToMelee};
 use crate::map::Map;
 
 pub fn monster_ai_system(
+    mut commands: Commands,
     mut map: ResMut<Map>,
-    mut game_log: ResMut<GameLog>,
     mut set: QuerySet<(
-        Query<&Position, With<Player>>,
-        Query<(&mut Viewshed, &mut Position, &EntityName), With<Monster>>,
+        Query<(Entity, &Position), With<Player>>,
+        Query<(Entity, &mut Viewshed, &mut Position, &EntityName), With<Monster>>,
     )>,
 ) {
-    let player_pos = *set.q0().single().unwrap();
+    let (player_entity, &player_pos) = set.q0().single().unwrap();
 
-    for (mut viewshed, mut pos, name) in set.q1_mut().iter_mut() {
+    for (entity, mut viewshed, mut pos, _name) in set.q1_mut().iter_mut() {
         if viewshed
             .visible_tiles
             .contains(&Point::new(player_pos.x, player_pos.y))
@@ -25,10 +24,10 @@ pub fn monster_ai_system(
                 Point::new(player_pos.x, player_pos.y),
             );
             if distance < 1.5 {
-                // Attack goes here
-                game_log
-                    .entries
-                    .push(format!("{} shouts insults", name.name));
+                // Within range. Attack the player!
+                commands.entity(entity).insert(WantsToMelee {
+                    target: player_entity,
+                });
                 return;
             }
             let path = a_star_search(

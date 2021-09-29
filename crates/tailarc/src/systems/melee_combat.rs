@@ -3,6 +3,7 @@ use bevy_ecs::prelude::*;
 use crate::components::{CombatStats, EntityName, SufferDamage, WantsToMelee};
 use crate::gamelog::GameLog;
 
+/// Processes all the [`WantsToMelee`] components and removes them from the entities.
 pub fn melee_combat_system(
     mut commands: Commands,
     mut game_log: ResMut<GameLog>,

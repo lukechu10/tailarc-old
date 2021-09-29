@@ -48,6 +48,14 @@ pub fn next_turn_state_system(mut turn_state: ResMut<TurnState>) {
     }
 }
 
+fn run_if_awaiting_input(ts: Res<TurnState>) -> ShouldRun {
+    if *ts == TurnState::AwaitingInput {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
 fn run_if_monster_turn(ts: Res<TurnState>) -> ShouldRun {
     if *ts == TurnState::Monster {
         ShouldRun::Yes
@@ -56,12 +64,33 @@ fn run_if_monster_turn(ts: Res<TurnState>) -> ShouldRun {
     }
 }
 
+#[derive(SystemLabel, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Label {
+    Input,
+    Indexing,
+}
+
+/// All the world's a stage. And all the men and women merely players.
+///
+/// All the stages defined here run after [`CoreStage::Update`].
+#[derive(StageLabel, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AppStages {
+    /// Run monster AI.
+    MonsterTurn,
+    /// Add damage components to the victims.
+    ApplyCombat,
+    /// Resolve damage on the victims.
+    ApplyDamage,
+    /// Last stage to execute.
+    ///
+    /// Entities that are dead are despawned.
+    /// Game is rendered here so that it has access to latest state.
+    Cleanup,
+}
+
 fn main() {
     #[cfg(target_arch = "wasm32")]
     console_error_panic_hook::set_once();
-
-    /// Label for our render stage.
-    static RENDER_STAGE: &str = "render";
 
     #[cfg(feature = "trace")]
     tracing_subscriber::fmt::init();
@@ -90,40 +119,74 @@ fn main() {
         .add_plugin(CorePlugin::default())
         .add_stage_after(
             CoreStage::Update,
-            RENDER_STAGE,
-            SystemStage::single_threaded(),
+            AppStages::MonsterTurn,
+            SystemStage::parallel(),
+        )
+        .add_stage_after(
+            AppStages::MonsterTurn,
+            AppStages::ApplyCombat,
+            SystemStage::parallel(),
+        )
+        .add_stage_after(
+            AppStages::ApplyCombat,
+            AppStages::ApplyDamage,
+            SystemStage::parallel(),
+        )
+        .add_stage_after(
+            AppStages::ApplyDamage,
+            AppStages::Cleanup,
+            SystemStage::parallel(),
         )
         .add_plugin(BracketLibPlugin::new(bterm))
         .insert_resource(TurnState::AwaitingInput)
         // Initialization logic
         .add_startup_system(init.system())
         // Handle input first. Input is what triggers the game to update.
-        .add_system(systems::input::player_input_system.system().label("input"))
+        .add_system(
+            systems::input::player_input_system
+                .system()
+                .label(Label::Input)
+                .with_run_criteria(run_if_awaiting_input.system()),
+        )
         // Run indexing systems after input to ensure that state is in sync.
+        // These don't need to be in a separate stage from CoreStage::Update because input doesn't
+        // spawn new entities/components.
         .add_system_set(
             SystemSet::new()
-                .label("indexing")
-                .after("input")
+                .label(Label::Indexing)
+                .after(Label::Input)
                 .with_system(systems::visibility::visibility_system.system())
                 .with_system(systems::map_indexing::map_indexing_system.system()),
         )
-        // Run update systems after indexing to ensure that they are operating on consistent state.
-        .add_system_set(
-            SystemSet::new()
-                .label("update")
-                .after("indexing")
-                .with_system(
-                    systems::monster_ai::monster_ai_system
-                        .system()
-                        .after("indexing")
-                        .with_run_criteria(run_if_monster_turn.system()),
-                )
-                .with_system(systems::melee_combat::melee_combat_system.system())
-                .with_system(systems::damage::damage_system.system()),
-        )
-        // Rendering runs on the render stage after everything else.
+        // Run monster AI systems after indexing to ensure that they are operating on consistent
+        // state.
         .add_system_set_to_stage(
-            RENDER_STAGE,
+            AppStages::MonsterTurn,
+            SystemSet::new().with_system(
+                systems::monster_ai::monster_ai_system
+                    .system()
+                    .with_run_criteria(run_if_monster_turn.system()), /* Only run if it's the
+                                                                       * monster's turn. */
+            ),
+        )
+        // Run combat system to attach damage to victims.
+        //
+        // Monsters can add combat intention components which are handled in this stage.
+        .add_system_set_to_stage(
+            AppStages::ApplyCombat,
+            SystemSet::new().with_system(systems::melee_combat::melee_combat_system.system()),
+        )
+        // Run damage system to apply damage from combat.
+        //
+        // Previous stage adds damage components. This stage resolves the damage onto the entity's
+        // stats.
+        .add_system_set_to_stage(
+            AppStages::ApplyDamage,
+            SystemSet::new().with_system(systems::damage::damage_system.system()),
+        )
+        // Rendering runs on the cleanup stage after everything else.
+        .add_system_set_to_stage(
+            AppStages::Cleanup,
             SystemSet::new()
                 .with_system(
                     render::render

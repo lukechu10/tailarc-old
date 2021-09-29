@@ -80,6 +80,10 @@ pub struct MonsterBundle {
 }
 
 /// A component that indicates that an entity wants to attack.
+/// Should be attached on the attacker! Not the target.
+///
+/// This component will be automatically removed in the
+/// [`melee_combat_system`](crate::systems::melee_combat::melee_combat_system).
 pub struct WantsToMelee {
     pub target: Entity,
 }

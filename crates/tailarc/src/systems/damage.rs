@@ -1,6 +1,7 @@
 use bevy_ecs::prelude::*;
 
-use crate::components::{CombatStats, SufferDamage};
+use crate::components::{CombatStats, Player, SufferDamage};
+use crate::gamelog::GameLog;
 
 pub fn damage_system(
     mut commands: Commands,
@@ -14,10 +15,18 @@ pub fn damage_system(
     }
 }
 
-pub fn delete_the_dead(mut commands: Commands, q: Query<(Entity, &CombatStats)>) {
-    for (entity, stats) in q.iter() {
+pub fn delete_the_dead(
+    mut commands: Commands,
+    mut game_log: ResMut<GameLog>,
+    q: Query<(Entity, &CombatStats, Option<&Player>)>,
+) {
+    for (entity, stats, player) in q.iter() {
         if stats.hp <= 0 {
-            commands.entity(entity).despawn();
+            if player.is_some() {
+                game_log.entries.push("You died! :(".to_string());
+            } else {
+                commands.entity(entity).despawn();
+            }
         }
     }
 }
