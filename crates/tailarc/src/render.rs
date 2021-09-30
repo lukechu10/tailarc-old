@@ -1,4 +1,4 @@
-//! `doryen-rs` rendering code.
+//! Render game state to console.
 
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
