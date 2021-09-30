@@ -1,15 +1,23 @@
 use bevy_ecs::prelude::*;
 
-use crate::components::{CombatStats, EntityName, Player, SufferDamage};
+use crate::components::{CombatStats, EntityName, Player, Position, SufferDamage};
 use crate::gamelog::GameLog;
+use crate::map::Map;
 use crate::RunState;
 
 pub fn damage_system(
     mut commands: Commands,
-    mut q: Query<(Entity, &mut CombatStats, &SufferDamage)>,
+    mut map: ResMut<Map>,
+    mut q: Query<(Entity, &mut CombatStats, &SufferDamage, Option<&Position>)>,
 ) {
-    for (entity, mut stats, dmg) in q.iter_mut() {
+    for (entity, mut stats, dmg, pos) in q.iter_mut() {
         stats.hp -= dmg.amount.iter().sum::<i32>();
+
+        // Add bloodstains.
+        if let Some(pos) = pos {
+            let idx = map.xy_idx(pos.x as u32, pos.y as u32);
+            map.bloodstains.insert(idx);
+        }
 
         // Remove SufferDamage to prevent taking damage multiple times.
         commands.entity(entity).remove::<SufferDamage>();

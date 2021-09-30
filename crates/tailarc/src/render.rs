@@ -73,42 +73,47 @@ pub fn render_game_system(
     let player_pos = player.single().unwrap();
     let player_screen_pos = (console_width_for_map / 2, console_height_for_map / 2);
 
-    for ((tile, revealed), visible) in map
+    for ((tile, &revealed), &visible) in map
         .tiles
         .iter()
         .zip(map.revealed_tiles.iter())
         .zip(map.visible_tiles.iter())
     {
-        if *revealed {
+        if revealed {
             let glyph;
             let mut fg;
-            let mut bg;
+            let bg;
             match tile {
                 Tile::Wall => {
                     fg = RGB::from_u8(76, 235, 59);
-                    bg = RGB::from_u8(69, 69, 69);
                     glyph = wall_glyph(&map, x, y);
                 }
                 Tile::Floor => {
                     fg = RGB::from_u8(179, 118, 112);
-                    bg = RGB::from_u8(31, 23, 23);
                     glyph = '.' as u16;
                 }
                 Tile::BrickPath => {
                     fg = RGB::from_u8(0, 0, 0);
-                    bg = RGB::from_u8(217, 125, 72);
                     glyph = '.' as u16;
                 }
                 Tile::Grass => {
                     fg = RGB::from_u8(66, 245, 84);
-                    bg = RGB::from_u8(63, 224, 79);
                     glyph = '.' as u16;
                 }
             }
-            if !*visible {
+            if visible {
+                // Show bloodstains.
+                let idx = map.xy_idx(x as u32, y as u32);
+                bg = if map.bloodstains.contains(&idx) {
+                    RGB::from_u8(191, 0, 0)
+                } else {
+                    RGB::from_u8(0, 0, 0)
+                };
+            } else {
                 fg = fg.to_greyscale();
-                bg = bg.to_greyscale();
+                bg = RGB::from_u8(0, 0, 0); // Do not show bloodstains if out of sight.
             }
+
             // Calculate position of tile on screen (relative to position of player).
             let x_pos = x - player_pos.x + player_screen_pos.0 as i32;
             let y_pos = y - player_pos.y + player_screen_pos.1 as i32;
