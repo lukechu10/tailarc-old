@@ -1,20 +1,28 @@
-use bevy_ecs::prelude::*;
+use std::time::Duration;
 
-use crate::components::{CombatStats, EntityName, SufferDamage, WantsToMelee};
+use bevy_ecs::prelude::*;
+use bracket_lib::prelude::*;
+
+use crate::components::{
+    CombatStats, EntityName, Position, Renderable, SufferDamage, WantsToMelee,
+};
 use crate::gamelog::GameLog;
+
+use super::particle::ParticleBuilder;
 
 /// Processes all the [`WantsToMelee`] components and removes them from the entities.
 pub fn melee_combat_system(
     mut commands: Commands,
     game_log: Res<GameLog>,
+    mut particle_builder: ResMut<ParticleBuilder>,
     wants_melee: Query<(Entity, &WantsToMelee, &EntityName, &CombatStats)>,
-    target_stats: Query<(&CombatStats, &EntityName)>,
+    target_stats: Query<(&CombatStats, &EntityName, Option<&Position>)>,
     mut suffer_damage: Query<&mut SufferDamage>,
 ) {
     for (entity, wants_melee, name, stats) in wants_melee.iter() {
         let target = wants_melee.target;
 
-        if let Ok((target_stats, target_name)) = target_stats.get(target) {
+        if let Ok((target_stats, target_name, position)) = target_stats.get(target) {
             let damage = i32::max(0, stats.power - target_stats.defense);
 
             if damage == 0 {
@@ -28,6 +36,17 @@ pub fn melee_combat_system(
                     name.name, target_name.name, damage
                 ));
                 SufferDamage::new_damage(&mut commands, &mut suffer_damage, target, damage);
+                if let Some(position) = position {
+                    particle_builder.request(
+                        *position,
+                        Renderable {
+                            bg: RGB::named(BLACK),
+                            fg: RGB::named(ORANGE),
+                            glyph: to_cp437('‼'),
+                        },
+                        Duration::from_millis(200),
+                    );
+                }
             }
         } else {
             game_log.add_entry(format!("{} hacked at the air!", name.name));

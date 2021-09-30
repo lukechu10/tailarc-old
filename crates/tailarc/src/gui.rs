@@ -59,7 +59,7 @@ pub fn render_ui_system(
     ctx.draw_bar_horizontal(
         32,
         CONSOLE_HEIGHT - 7,
-        50,
+        30,
         stats.hp,
         stats.max_hp,
         RGB::named(RED),

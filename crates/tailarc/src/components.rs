@@ -2,6 +2,7 @@
 
 use std::collections::HashSet;
 
+use bevy_core::Timer;
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
@@ -107,4 +108,15 @@ impl SufferDamage {
             });
         }
     }
+}
+
+pub struct ParticleLifetime {
+    pub timer: Timer,
+}
+
+#[derive(Bundle)]
+pub struct ParticleBundle {
+    pub particle_lifetime: ParticleLifetime,
+    pub position: Position,
+    pub renderable: Renderable,
 }

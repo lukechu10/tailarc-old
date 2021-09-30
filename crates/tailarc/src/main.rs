@@ -79,9 +79,15 @@ pub fn run_if_in_game(state: Res<State<RunState>>) -> ShouldRun {
 }
 
 #[derive(SystemLabel, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Label {
+pub enum UpdateLabel {
     Input,
     Indexing,
+}
+
+#[derive(SystemLabel, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum RenderLabel {
+    Map,
+    UiAndParticles,
 }
 
 /// All the world's a stage. And all the men and women merely players.
@@ -167,7 +173,7 @@ fn main() {
             SystemSet::on_update(RunState::AwaitingInput).with_system(
                 systems::input::player_input_system
                     .system()
-                    .label(Label::Input),
+                    .label(UpdateLabel::Input),
             ),
         )
         // Run indexing systems after input to ensure that state is in sync.
@@ -176,8 +182,8 @@ fn main() {
         .add_system_set(
             SystemSet::new()
                 .with_run_criteria(run_if_in_game.system())
-                .label(Label::Indexing)
-                .after(Label::Input)
+                .label(UpdateLabel::Indexing)
+                .after(UpdateLabel::Input)
                 .with_system(systems::visibility::visibility_system.system())
                 .with_system(systems::map_indexing::map_indexing_system.system()),
         )
@@ -211,15 +217,24 @@ fn main() {
             AppStages::CleanupAndRender,
             SystemSet::new()
                 .with_run_criteria(run_if_in_game.system())
+                .with_system(render::render_game_system.system().label(RenderLabel::Map))
                 .with_system(
-                    render::render_game_system
+                    gui::render_ui_system
                         .system()
-                        .chain(gui::render_ui_system.system()),
+                        .label(RenderLabel::UiAndParticles)
+                        .after(RenderLabel::Map),
+                )
+                .with_system(
+                    systems::particle::particle_system
+                        .system()
+                        .label(RenderLabel::UiAndParticles)
+                        .after(RenderLabel::Map),
                 )
                 // We can run these systems in parallel with rendering because they perform cleanup
                 // code for the tick. Commands are queued until next stage so render will
                 // still be consistent.
-                .with_system(systems::damage::delete_the_dead.system()),
+                .with_system(systems::damage::delete_the_dead.system())
+                .with_system(systems::particle::spawn_particles_system.system()),
         )
         .add_system_set_to_stage(
             AppStages::CleanupAndRender,
@@ -281,6 +296,7 @@ fn init(mut commands: Commands) {
     commands.insert_resource(gui::MainMenuResult::NoSelection {
         selected: gui::MainMenuSelection::NewGame,
     });
+    commands.insert_resource(systems::particle::ParticleBuilder::new());
 
     tracing::info!("Finished initialization");
 }
