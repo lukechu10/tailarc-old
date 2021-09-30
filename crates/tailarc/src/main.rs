@@ -268,7 +268,7 @@ fn init(mut commands: Commands) {
     // Spawn resources.
 
     // Tile map resource.
-    let map = map::Map::new_random(100, 100, &mut commands);
+    let map = map::Map::new_random(&mut commands, 100, 100, 1);
     commands.insert_resource(map);
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {

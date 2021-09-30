@@ -3,6 +3,7 @@ use bracket_lib::prelude::*;
 
 use crate::components::{CombatStats, Player};
 use crate::gamelog::GameLog;
+use crate::map::Map;
 use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -19,12 +20,13 @@ pub enum MainMenuResult {
 
 /// Render in game UI.
 pub fn render_ui_system(
-    mut bterm: ResMut<BTerm>,
+    mut ctx: ResMut<BTerm>,
+    map: Res<Map>,
     game_log: Res<GameLog>,
     player: Query<&CombatStats, With<Player>>,
 ) {
     // Draw ui box.
-    bterm.draw_box_double(
+    ctx.draw_box_double(
         0,
         CONSOLE_HEIGHT - 7,
         CONSOLE_WIDTH - 1,
@@ -33,19 +35,29 @@ pub fn render_ui_system(
         RGB::named(BLACK),
     );
 
+    // Draw depth of current level.
+    let depth = format!(" Depth: {} ", map.depth);
+    ctx.print_color(
+        2,
+        CONSOLE_HEIGHT - 7,
+        RGB::named(YELLOW),
+        RGB::named(BLACK),
+        &depth,
+    );
+
     // Draw player health.
     let stats = player.single().unwrap();
 
     let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
-    bterm.print_color(
-        2,
+    ctx.print_color(
+        14,
         CONSOLE_HEIGHT - 7,
         RGB::named(YELLOW),
         RGB::named(BLACK),
         &health,
     );
-    bterm.draw_bar_horizontal(
-        20,
+    ctx.draw_bar_horizontal(
+        32,
         CONSOLE_HEIGHT - 7,
         50,
         stats.hp,
@@ -58,7 +70,7 @@ pub fn render_ui_system(
     let mut y = CONSOLE_HEIGHT - 6;
     for log in game_log.entries.lock().unwrap().iter().rev() {
         if y < CONSOLE_HEIGHT - 1 {
-            bterm.print(2, y, log);
+            ctx.print(2, y, log);
         }
         y += 1;
     }

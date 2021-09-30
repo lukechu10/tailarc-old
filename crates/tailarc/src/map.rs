@@ -37,10 +37,12 @@ pub struct Map {
     pub width: u32,
     /// Height of the tile map.
     pub height: u32,
+    /// Depth of the current level.
+    pub depth: i32,
 }
 
 impl Map {
-    pub fn new_random(width: u32, height: u32, commands: &mut Commands) -> Self {
+    pub fn new_random(commands: &mut Commands, width: u32, height: u32, depth: i32) -> Self {
         let tile_map_size = (width * height) as usize;
 
         let mut map = vec![Tile::Floor; tile_map_size];
@@ -98,6 +100,7 @@ impl Map {
             blocked: vec![false; tile_map_size],
             width,
             height,
+            depth,
         }
     }
 
