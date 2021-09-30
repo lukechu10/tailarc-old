@@ -49,7 +49,6 @@ pub fn spawn_particles_system(
 /// Renders particles and deletes dead particles.
 pub fn particle_system(
     mut commands: Commands,
-    mut ctx: ResMut<BTerm>,
     time: Res<Time>,
     mut particles: Query<(Entity, &mut ParticleLifetime, &Position, &Renderable)>,
 ) {
@@ -59,8 +58,5 @@ pub fn particle_system(
         if lifetime.timer.finished() {
             commands.entity(entity).despawn();
         }
-
-        // Draw particles.
-        ctx.set(pos.x, pos.y, renderable.fg, renderable.bg, renderable.glyph);
     }
 }

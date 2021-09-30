@@ -278,8 +278,8 @@ fn init(mut commands: Commands) {
             dirty: true,
         },
         combat_stats: CombatStats {
-            hp: 30,
-            max_hp: 30,
+            hp: 100,
+            max_hp: 100,
             defense: 2,
             power: 5,
         },

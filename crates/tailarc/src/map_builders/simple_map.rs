@@ -25,13 +25,14 @@ impl SimpleMapBuilder {
     }
 
     pub fn new_map_rooms_and_corridors(&mut self) {
-        const MAX_ROOMS: u32 = 30;
         const MIN_SIZE: u32 = 6;
         const MAX_SIZE: u32 = 10;
 
+        let max_rooms = (self.map.width * self.map.height) / 100;
+
         let mut rng = thread_rng();
 
-        for _ in 0..MAX_ROOMS {
+        for _ in 0..max_rooms {
             let w = rng.gen_range(MIN_SIZE..MAX_SIZE);
             let h = rng.gen_range(MIN_SIZE..MAX_SIZE);
             let x = rng.gen_range(1..self.map.width - w - 1) - 1;

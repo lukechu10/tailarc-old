@@ -36,9 +36,9 @@ pub fn melee_combat_system(
                     name.name, target_name.name, damage
                 ));
                 SufferDamage::new_damage(&mut commands, &mut suffer_damage, target, damage);
-                if let Some(position) = position {
+                if let Some(&position) = position {
                     particle_builder.request(
-                        *position,
+                        position,
                         Renderable {
                             bg: RGB::named(BLACK),
                             fg: RGB::named(ORANGE),
