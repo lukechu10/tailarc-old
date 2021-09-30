@@ -238,8 +238,12 @@ fn init(mut commands: Commands) {
     use map_builders::MapBuilder;
 
     // Generate map.
-    let map = SimpleMapBuilder::build_map(1);
-    let starting_position = SimpleMapBuilder::starting_position();
+    let mut simple_map = SimpleMapBuilder::new(100, 100, 1);
+    simple_map.build_map();
+    let starting_position = simple_map.starting_position();
+
+    // Spawn monsters.
+    simple_map.spawn_entities(&mut commands);
 
     // Spawn entities.
     commands.spawn_bundle(PlayerBundle {
@@ -269,7 +273,7 @@ fn init(mut commands: Commands) {
     // Spawn resources.
 
     // Tile map resource.
-    commands.insert_resource(map);
+    commands.insert_resource(simple_map.get_map());
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
         entries: Mutex::new(vec!["Welcome to Tailarc!".to_string()]),

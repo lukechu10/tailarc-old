@@ -12,6 +12,8 @@ bevy_core = "0.5.0"
 bevy_ecs = "0.5.0"
 bracket-lib = "0.8.1"
 rand = "0.8.4"
+serde = { version = "1.0.130", features = ["derive"] }
+serde_json = "1.0.68"
 tracing = "0.1.28"
 tracing-subscriber = { version = "0.2.24", optional = true }
 

@@ -1830,6 +1830,8 @@ dependencies = [
  "bracket-lib",
  "console_error_panic_hook",
  "rand",
+ "serde",
+ "serde_json",
  "tracing",
  "tracing-subscriber",
 ]
