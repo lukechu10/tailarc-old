@@ -42,6 +42,21 @@ pub struct Map {
 }
 
 impl Map {
+    /// Create a new map consisting entirely of solid walls.
+    pub fn new(width: u32, height: u32, depth: i32) -> Self {
+        let tile_map_size = (width * height) as usize;
+        Self {
+            tiles: vec![Tile::Wall; tile_map_size],
+            revealed_tiles: vec![false; tile_map_size],
+            visible_tiles: vec![false; tile_map_size],
+            tile_content: vec![Vec::new(); tile_map_size],
+            blocked: vec![false; tile_map_size],
+            width,
+            height,
+            depth,
+        }
+    }
+
     pub fn new_random(commands: &mut Commands, width: u32, height: u32, depth: i32) -> Self {
         let tile_map_size = (width * height) as usize;
 

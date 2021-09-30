@@ -233,9 +233,13 @@ fn main() {
 
 /// Initialization for entities and resources.
 fn init(mut commands: Commands) {
-    use components::{
-        CombatStats, EntityName, Player, PlayerBundle, Position, Renderable, Viewshed,
-    };
+    use components::{CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed};
+    use map_builders::simple_map::SimpleMapBuilder;
+    use map_builders::MapBuilder;
+
+    // Generate map.
+    let map = SimpleMapBuilder::build_map(1);
+    let starting_position = SimpleMapBuilder::starting_position();
 
     // Spawn entities.
     commands.spawn_bundle(PlayerBundle {
@@ -243,10 +247,7 @@ fn init(mut commands: Commands) {
         name: EntityName {
             name: "Player".to_string(),
         },
-        position: Position {
-            x: (CONSOLE_WIDTH / 2) as i32,
-            y: (CONSOLE_HEIGHT / 2) as i32,
-        },
+        position: starting_position,
         renderable: Renderable {
             glyph: '@' as u16,
             fg: RGB::named(YELLOW),
@@ -268,7 +269,6 @@ fn init(mut commands: Commands) {
     // Spawn resources.
 
     // Tile map resource.
-    let map = map::Map::new_random(&mut commands, 100, 100, 1);
     commands.insert_resource(map);
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
