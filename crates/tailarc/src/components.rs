@@ -121,3 +121,6 @@ pub struct ParticleBundle {
     pub position: Position,
     pub renderable: Renderable,
 }
+
+/// Item entity.
+pub struct Item;
