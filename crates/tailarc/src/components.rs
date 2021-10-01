@@ -5,6 +5,7 @@ use std::collections::HashSet;
 use bevy_core::Timer;
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// A component that gives an entity a position.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
@@ -21,7 +22,7 @@ pub struct EntityName {
 /// A component that makes an entity block a tile (so that other entities can't pass through it).
 pub struct BlocksTile;
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct CombatStats {
     pub hp: i32,
     pub max_hp: i32,
@@ -30,10 +31,13 @@ pub struct CombatStats {
 }
 
 /// A component that contains the data needed to render a tile.
-#[derive(Debug, Clone)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub struct Renderable {
+    #[serde(deserialize_with = "crate::deserialize::u16_from_cp437")]
     pub glyph: u16,
+    #[serde(deserialize_with = "crate::deserialize::rgb_from_hex")]
     pub fg: RGB,
+    #[serde(deserialize_with = "crate::deserialize::rgb_from_hex")]
     pub bg: RGB,
 }
 

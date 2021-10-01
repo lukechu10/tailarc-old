@@ -13,5 +13,49 @@
                 "power_bonus": 2
             }
         }
+    ],
+    "mobs": [
+        {
+            "name": "Goblin",
+            "renderable": {
+                "glyph": "g",
+                "fg": "#FF0000",
+                "bg": "#000000",
+                "order": 1
+            },
+            "blocks_tile": true,
+            "vision_range": 8,
+            "movement": "static",
+            "attributes": {},
+            "stats": {
+                "max_hp": 16,
+                "hp": 16,
+                "defense": 1,
+                "power": 4
+            },
+            "faction": "Cave Goblins",
+            "gold": "1d6"
+        },
+        {
+            "name": "Orc",
+            "renderable": {
+                "glyph": "o",
+                "fg": "#FF0000",
+                "bg": "#000000",
+                "order": 1
+            },
+            "blocks_tile": true,
+            "vision_range": 8,
+            "movement": "static",
+            "attributes": {},
+            "stats": {
+                "max_hp": 20,
+                "hp": 20,
+                "defense": 1,
+                "power": 4
+            },
+            "faction": "Cave Goblins",
+            "gold": "1d6"
+        }
     ]
 }

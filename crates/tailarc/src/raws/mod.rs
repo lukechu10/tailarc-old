@@ -1,58 +1,26 @@
 //! Code for manipulating raw files.
 
+mod item_structs;
 mod manager;
+mod mob_structs;
 
-use std::collections::HashMap;
-
-use bevy_ecs::world::EntityMut;
-use bracket_lib::prelude::{to_cp437, RGB};
+use bevy_ecs::prelude::Commands;
 use include_dir::{include_dir, Dir};
-pub use manager::*;
-use serde::{Deserialize, Serialize};
+use manager::RAW_MANAGER;
+use serde::Deserialize;
 
 use crate::components::{EntityName, Position};
 
 /// The `/static` directory.
 pub static STATIC: Dir = include_dir!("../../static");
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Raws {
-    pub items: Vec<Item>,
+    pub items: Vec<item_structs::Item>,
+    pub mobs: Vec<mob_structs::Mob>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Item {
-    name: String,
-    renderable: Option<Renderable>,
-    weapon: Option<Weapon>,
-    consumable: Option<Consumable>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Renderable {
-    glyph: char,
-    fg: String,
-    bg: String,
-    order: i32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "snake_case")]
-pub enum WeaponRange {
-    Melee,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Weapon {
-    pub range: WeaponRange,
-    pub power_bonus: i32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Consumable {
-    pub effects: HashMap<String, String>,
-}
-
+/// Loads the raws from the `/static/spawns.json` file into memory.
 pub fn load_spawns() {
     let json = STATIC.get_file("spawns.json").unwrap().contents();
     let raws: Raws = serde_json::from_slice(json).expect("could not parse spawns.json");
@@ -60,22 +28,30 @@ pub fn load_spawns() {
     RAW_MANAGER.write().load(raws);
 }
 
-pub fn get_item(name: &str) -> Option<Item> {
+pub fn get_item(name: &str) -> Option<item_structs::Item> {
     let raw_manager = RAW_MANAGER.read();
     let i = raw_manager.item_index.get(name).copied();
     i.map(|i| raw_manager.raws.items[i].clone())
+}
+
+pub fn get_mob(name: &str) -> Option<mob_structs::Mob> {
+    let raw_manager = RAW_MANAGER.read();
+    let i = raw_manager.mob_index.get(name).copied();
+    i.map(|i| raw_manager.raws.mobs[i].clone())
 }
 
 pub enum SpawnType {
     AtPosition(Position),
 }
 
-/// Adds components to the `entity` according to a named raw item.
+/// Spawns a new item.
 ///
 /// # Panics
-/// Panics if the item is not found.
-pub fn init_named_item(e: &mut EntityMut, name: &str, spawn_type: SpawnType) {
+/// Panics if the item with the given name is not found.
+pub fn spawn_named_item(commands: &mut Commands, name: &str, spawn_type: SpawnType) {
     let item = get_item(name).expect("could not find item");
+
+    let mut e = commands.spawn();
 
     match spawn_type {
         SpawnType::AtPosition(pos) => {
@@ -83,16 +59,9 @@ pub fn init_named_item(e: &mut EntityMut, name: &str, spawn_type: SpawnType) {
         }
     }
 
-    // Renderable.
     if let Some(renderable) = &item.renderable {
-        // Parse raw renderable into Renderable component.
-        e.insert(crate::components::Renderable {
-            glyph: to_cp437(renderable.glyph),
-            fg: RGB::from_hex(&renderable.fg).expect("invalid hex color code"),
-            bg: RGB::from_hex(&renderable.bg).expect("invalid hex color code"),
-        });
+        e.insert(*renderable);
     }
-
     e.insert(EntityName { name: item.name });
     e.insert(crate::components::Item);
 
@@ -105,4 +74,34 @@ pub fn init_named_item(e: &mut EntityMut, name: &str, spawn_type: SpawnType) {
     if let Some(_weapon) = &item.weapon {
         todo!("weapons");
     }
+}
+
+/// Spawns a new entity.
+///
+/// # Panics
+/// Panics if the entity with the given name is not found.
+pub fn spawn_named_entity(commands: &mut Commands, name: &str, spawn_type: SpawnType) {
+    let mob = get_mob(name).expect("could not find mob");
+
+    let mut e = commands.spawn();
+
+    match spawn_type {
+        SpawnType::AtPosition(pos) => {
+            e.insert(pos);
+        }
+    }
+
+    // Renderable.
+    if let Some(renderable) = &mob.renderable {
+        e.insert(*renderable);
+    }
+
+    if mob.blocks_tile {
+        e.insert(crate::components::BlocksTile);
+    }
+
+    e.insert(mob.stats);
+    e.insert(crate::components::Viewshed::new(mob.vision_range));
+    e.insert(EntityName { name: mob.name });
+    e.insert(crate::components::Monster);
 }

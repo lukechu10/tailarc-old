@@ -1,17 +1,87 @@
 mod common;
+pub mod room_based_spawner;
+pub mod room_based_starting_position;
 pub mod simple_map;
 
-use bevy_ecs::prelude::*;
+use bevy_ecs::prelude::Commands;
 use common::*;
 
 use crate::components::Position;
 use crate::map::Map;
+use crate::raws::{spawn_named_entity, SpawnType};
 
-pub trait MapBuilder {
-    fn get_map(&self) -> Map;
-    fn build_map(&mut self);
-    fn starting_position(&self) -> Position;
-    fn spawn_entities(&mut self, commands: &mut Commands);
+pub struct MapBuilder {
+    pub map: Map,
+    pub starting_position: Option<Position>,
+    pub rooms: Option<Vec<Rect>>,
+    pub corridors: Option<Vec<Vec<usize>>>,
+    pub spawn_list: Vec<(Position, String)>,
+}
+
+pub struct MapBuilderChain {
+    pub starter: Box<dyn InitialMapBuilder>,
+    pub builders: Vec<Box<dyn MetaMapBuilder>>,
+    pub build_data: MapBuilder,
+}
+
+impl MapBuilderChain {
+    pub fn new(
+        width: u32,
+        height: u32,
+        depth: i32,
+        starter: impl InitialMapBuilder + 'static,
+    ) -> Self {
+        Self {
+            starter: Box::new(starter),
+            builders: Vec::new(),
+            build_data: MapBuilder {
+                map: Map::new(width, height, depth),
+                starting_position: None,
+                rooms: None,
+                corridors: None,
+                spawn_list: Vec::new(),
+            },
+        }
+    }
+
+    pub fn with(mut self, builder: impl MetaMapBuilder + 'static) -> Self {
+        self.builders.push(Box::new(builder));
+        self
+    }
+
+    pub fn build_map(&mut self) -> Map {
+        self.starter.build_map(&mut self.build_data);
+
+        for meta_builder in &mut self.builders {
+            meta_builder.build_map(&mut self.build_data);
+        }
+
+        self.build_data.map.clone()
+    }
+
+    /// Gets the starting position.
+    ///
+    /// # Panic
+    /// Panics if the starting position has not been set.
+    pub fn starting_position(&self) -> Position {
+        self.build_data
+            .starting_position
+            .expect("starting position not set")
+    }
+
+    pub fn spawn_entities(&mut self, commands: &mut Commands) {
+        for entity in &self.build_data.spawn_list {
+            spawn_named_entity(commands, &entity.1, SpawnType::AtPosition(entity.0));
+        }
+    }
+}
+
+pub trait InitialMapBuilder {
+    fn build_map(&mut self, build_data: &mut MapBuilder);
+}
+
+pub trait MetaMapBuilder {
+    fn build_map(&mut self, build_data: &mut MapBuilder);
 }
 
 /// Rectangle dimensions and position.

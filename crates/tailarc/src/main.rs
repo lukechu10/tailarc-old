@@ -1,13 +1,14 @@
 #![allow(clippy::type_complexity)]
 
 pub mod components;
+pub mod deserialize;
 pub mod gamelog;
 pub mod gui;
 pub mod map;
 pub mod map_builders;
+pub mod raws;
 pub mod render;
 pub mod systems;
-pub mod raws;
 
 use std::collections::HashSet;
 use std::sync::Mutex;
@@ -240,16 +241,21 @@ fn main() {
 /// Initialization for entities and resources.
 fn init(mut commands: Commands) {
     use components::{CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed};
+    use map_builders::room_based_spawner::RoomBasedSpawner;
+    use map_builders::room_based_starting_position::RoomBasedStartingPosition;
     use map_builders::simple_map::SimpleMapBuilder;
-    use map_builders::MapBuilder;
+    use map_builders::MapBuilderChain;
 
     // Generate map.
-    let mut simple_map = SimpleMapBuilder::new(100, 100, 1);
-    simple_map.build_map();
-    let starting_position = simple_map.starting_position();
+    let mut builder = MapBuilderChain::new(100, 100, 1, SimpleMapBuilder)
+        .with(RoomBasedStartingPosition)
+        .with(RoomBasedSpawner);
+
+    let map = builder.build_map();
+    let starting_position = builder.starting_position();
 
     // Spawn monsters.
-    simple_map.spawn_entities(&mut commands);
+    builder.spawn_entities(&mut commands);
 
     // Spawn entities.
     commands.spawn_bundle(PlayerBundle {
@@ -279,7 +285,7 @@ fn init(mut commands: Commands) {
     // Spawn resources.
 
     // Tile map resource.
-    commands.insert_resource(simple_map.get_map());
+    commands.insert_resource(map);
     // Game log resource.
     commands.insert_resource(gamelog::GameLog {
         entries: Mutex::new(vec!["Welcome to Tailarc!".to_string()]),
