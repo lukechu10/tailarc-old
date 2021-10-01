@@ -30,6 +30,7 @@ pub struct CombatStats {
 }
 
 /// A component that contains the data needed to render a tile.
+#[derive(Debug, Clone)]
 pub struct Renderable {
     pub glyph: u16,
     pub fg: RGB,

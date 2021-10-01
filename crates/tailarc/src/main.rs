@@ -7,6 +7,7 @@ pub mod map;
 pub mod map_builders;
 pub mod render;
 pub mod systems;
+pub mod raws;
 
 use std::collections::HashSet;
 use std::sync::Mutex;
@@ -123,6 +124,9 @@ fn main() {
         .build()
         .unwrap();
     bterm.with_post_scanlines(true);
+
+    // Load the raws.
+    raws::load_spawns();
 
     bevy_app::App::build()
         .add_plugin(CorePlugin::default())
