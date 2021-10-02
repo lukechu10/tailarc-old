@@ -131,12 +131,11 @@ pub struct Item;
 
 /// Indicates intent to pickup an item.
 pub struct WantsToPickupItem {
-    pub collected_by: Entity,
     pub item: Entity,
 }
 
 /// An entity that is in a backpack.
-pub struct InPack {
+pub struct InBackpack {
     pub owner: Entity,
 }
 

@@ -29,6 +29,7 @@ struct State {
 impl GameState for State {
     fn tick(&mut self, bterm: &mut BTerm) {
         self.bevy_app.world.insert_resource(bterm.clone());
+
         self.bevy_app.update();
     }
 }

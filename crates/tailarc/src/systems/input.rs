@@ -7,7 +7,7 @@ use crate::RunState;
 
 /// Get and update player position from input.
 ///
-/// Updates [`InputState`] appropriately depending on whether input was received.
+/// If input was received, update the [`RunState`] to [`RunState::Player`].
 pub fn player_input_system(
     mut commands: Commands,
     bterm: Res<BTerm>,

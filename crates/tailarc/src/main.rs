@@ -225,6 +225,7 @@ fn main() {
                 // We can run these systems in parallel with rendering because they perform cleanup
                 // code for the tick. Commands are queued until next stage so render will
                 // still be consistent.
+                .with_system(systems::inventory::item_collection_system.system())
                 .with_system(systems::damage::delete_the_dead.system())
                 .with_system(systems::particle::spawn_particles_system.system()),
         )
