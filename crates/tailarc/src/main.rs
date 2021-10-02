@@ -31,6 +31,7 @@ pub const CONSOLE_TITLE: &str = "Tailarc";
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RunState {
     MainMenu,
+    ShowInventory,
     AwaitingInput,
     Player,
     Monster,
@@ -40,7 +41,9 @@ impl RunState {
     #[track_caller]
     pub fn advance_state(state: &mut ResMut<State<Self>>) {
         let next = match state.current() {
-            RunState::MainMenu => None, // Main menu stays in main menu.
+            RunState::MainMenu => None,      // Main menu stays in main menu.
+            RunState::ShowInventory => None, // Inventory does not close by itself!
+            // Game loop.
             RunState::AwaitingInput => Some(RunState::Player),
             RunState::Player => Some(RunState::Monster),
             RunState::Monster => Some(RunState::AwaitingInput),
@@ -54,19 +57,24 @@ impl RunState {
 /// Advances the [`RunState`] to the next state (for the next tick).
 pub fn next_turn_state_system(
     mut state: ResMut<State<RunState>>,
-    main_menu_result: Res<gui::MainMenuResult>,
+    main_menu_result: Res<render::MainMenuResult>,
+    item_menu_result: Res<gui::ItemMenuResult>,
 ) {
     if *state.current() == RunState::MainMenu {
-        if let gui::MainMenuResult::Selected { selected } = *main_menu_result {
+        if let render::MainMenuResult::Selected { selected } = *main_menu_result {
             match selected {
-                gui::MainMenuSelection::NewGame => state.set(RunState::AwaitingInput).unwrap(),
-                gui::MainMenuSelection::LoadGame => todo!("load state"),
-                gui::MainMenuSelection::Quit => std::process::exit(0),
+                render::MainMenuSelection::NewGame => state.set(RunState::AwaitingInput).unwrap(),
+                render::MainMenuSelection::LoadGame => todo!("load state"),
+                render::MainMenuSelection::Quit => std::process::exit(0),
             }
         }
-    }
-
-    if *state.current() != RunState::AwaitingInput {
+    } else if *state.current() == RunState::ShowInventory {
+        match *item_menu_result {
+            gui::ItemMenuResult::Cancel => state.set(RunState::AwaitingInput).unwrap(),
+            gui::ItemMenuResult::NoResponse => {}
+            gui::ItemMenuResult::Selected => todo!(),
+        }
+    } else if *state.current() != RunState::AwaitingInput {
         RunState::advance_state(&mut state);
     }
 }
@@ -217,18 +225,18 @@ fn main() {
                         .label(RenderLabel::UiAndParticles)
                         .after(RenderLabel::Map),
                 )
-                .with_system(
-                    systems::particle::cull_particles_system
-                        .system()
-                        .label(RenderLabel::UiAndParticles)
-                        .after(RenderLabel::Map),
-                )
                 // We can run these systems in parallel with rendering because they perform cleanup
                 // code for the tick. Commands are queued until next stage so render will
                 // still be consistent.
                 .with_system(systems::inventory::item_collection_system.system())
                 .with_system(systems::damage::delete_the_dead.system())
-                .with_system(systems::particle::spawn_particles_system.system()),
+                .with_system(systems::particle::spawn_particles_system.system())
+                .with_system(systems::particle::cull_particles_system.system()),
+        )
+        .add_system_set_to_stage(
+            AppStages::CleanupAndRender,
+            SystemSet::on_update(RunState::ShowInventory)
+                .with_system(gui::render_inventory.system()),
         )
         .add_system_set_to_stage(
             AppStages::CleanupAndRender,
@@ -289,9 +297,10 @@ fn init(mut commands: Commands) {
     commands.insert_resource(gamelog::GameLog {
         entries: Mutex::new(vec!["Welcome to Tailarc!".to_string()]),
     });
-    commands.insert_resource(gui::MainMenuResult::NoSelection {
-        selected: gui::MainMenuSelection::NewGame,
+    commands.insert_resource(render::MainMenuResult::NoSelection {
+        selected: render::MainMenuSelection::NewGame,
     });
+    commands.insert_resource(gui::ItemMenuResult::NoResponse);
     commands.insert_resource(systems::particle::ParticleBuilder::new());
 
     tracing::info!("Finished initialization");

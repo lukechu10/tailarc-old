@@ -1,22 +1,10 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{CombatStats, Player};
+use crate::components::{CombatStats, EntityName, InBackpack, Item, Player};
 use crate::gamelog::GameLog;
 use crate::map::Map;
 use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum MainMenuSelection {
-    NewGame,
-    LoadGame,
-    Quit,
-}
-
-pub enum MainMenuResult {
-    NoSelection { selected: MainMenuSelection },
-    Selected { selected: MainMenuSelection },
-}
 
 /// Render in game UI.
 pub fn render_ui_system(
@@ -74,4 +62,71 @@ pub fn render_ui_system(
         }
         y += 1;
     }
+}
+
+/// Render in game inventory.
+#[derive(PartialEq, Copy, Clone)]
+pub enum ItemMenuResult {
+    Cancel,
+    NoResponse,
+    Selected,
+}
+
+pub fn render_inventory(
+    mut ctx: ResMut<BTerm>,
+    mut item_menu_result: ResMut<ItemMenuResult>,
+    player: Query<Entity, With<Player>>,
+    items: Query<(&EntityName, &InBackpack), With<Item>>,
+) {
+    let player_entity = player.single().unwrap();
+
+    let inventory: Vec<_> = items
+        .iter()
+        .filter(|(_, i)| i.owner == player_entity)
+        .collect();
+    let count = inventory.len();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(
+        15,
+        y - 2,
+        31,
+        (count + 3) as i32,
+        RGB::named(WHITE),
+        RGB::named(BLACK),
+    );
+    ctx.print_color(
+        18,
+        y - 2,
+        RGB::named(YELLOW),
+        RGB::named(BLACK),
+        "Inventory",
+    );
+    ctx.print_color(
+        18,
+        y + count as i32 + 1,
+        RGB::named(YELLOW),
+        RGB::named(BLACK),
+        "ESCAPE to cancel",
+    );
+
+    for (j, (name, _)) in inventory.into_iter().enumerate() {
+        ctx.set(17, y, RGB::named(WHITE), RGB::named(BLACK), to_cp437('('));
+        ctx.set(
+            18,
+            y,
+            RGB::named(YELLOW),
+            RGB::named(BLACK),
+            97 + j as FontCharType,
+        );
+        ctx.set(19, y, RGB::named(WHITE), RGB::named(BLACK), to_cp437(')'));
+
+        ctx.print(21, y, &name.name.to_string());
+        y += 1;
+    }
+
+    *item_menu_result = match ctx.key {
+        Some(VirtualKeyCode::Escape) => ItemMenuResult::Cancel,
+        _ => ItemMenuResult::NoResponse,
+    };
 }

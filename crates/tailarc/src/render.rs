@@ -4,7 +4,6 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
 use crate::components::{Player, Position, Renderable};
-use crate::gui::{MainMenuResult, MainMenuSelection};
 use crate::map::{Map, Tile};
 use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
 
@@ -149,6 +148,18 @@ pub fn render_game_system(
             );
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum MainMenuSelection {
+    NewGame,
+    LoadGame,
+    Quit,
+}
+
+pub enum MainMenuResult {
+    NoSelection { selected: MainMenuSelection },
+    Selected { selected: MainMenuSelection },
 }
 
 pub fn render_main_menu_system(

@@ -33,6 +33,13 @@ pub fn player_input_system(
             &game_log,
             items,
         );
+        return;
+    }
+
+    // Show inventory.
+    if bterm.key == Some(VirtualKeyCode::I) {
+        // We can unwrap() here because this system is only executed during RunState::AwaitingInput.
+        state.set(RunState::ShowInventory).unwrap();
     }
 
     let mut delta_x = 0;
