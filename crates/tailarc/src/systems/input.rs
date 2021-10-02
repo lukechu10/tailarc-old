@@ -33,6 +33,8 @@ pub fn player_input_system(
             &game_log,
             items,
         );
+        // Picking up items is a turn.
+        RunState::advance_state(&mut state);
         return;
     }
 
@@ -40,6 +42,7 @@ pub fn player_input_system(
     if bterm.key == Some(VirtualKeyCode::I) {
         // We can unwrap() here because this system is only executed during RunState::AwaitingInput.
         state.set(RunState::ShowInventory).unwrap();
+        return;
     }
 
     let mut delta_x = 0;

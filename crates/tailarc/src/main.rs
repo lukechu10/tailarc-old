@@ -235,8 +235,12 @@ fn main() {
         )
         .add_system_set_to_stage(
             AppStages::CleanupAndRender,
-            SystemSet::on_update(RunState::ShowInventory)
-                .with_system(gui::render_inventory.system()),
+            SystemSet::on_update(RunState::ShowInventory).with_system(
+                gui::render_inventory
+                    .system()
+                    .label(RenderLabel::UiAndParticles)
+                    .after(RenderLabel::Map),
+            ),
         )
         .add_system_set_to_stage(
             AppStages::CleanupAndRender,
