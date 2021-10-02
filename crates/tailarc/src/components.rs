@@ -128,3 +128,19 @@ pub struct ParticleBundle {
 
 /// Item entity.
 pub struct Item;
+
+/// Indicates intent to pickup an item.
+pub struct WantsToPickupItem {
+    pub collected_by: Entity,
+    pub item: Entity,
+}
+
+/// An entity that is in a backpack.
+pub struct InPack {
+    pub owner: Entity,
+}
+
+/// An item that has an effect when drunk.
+pub struct Potion {
+    pub heal_amount: i32,
+}
