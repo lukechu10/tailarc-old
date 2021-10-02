@@ -1,16 +1,12 @@
 {
     "items": [
         {
-            "name": "Dagger",
+            "name": "Health Potion",
             "renderable": {
-                "glyph": "/",
-                "fg": "#FFAAAA",
+                "glyph": "¡",
+                "fg": "#f542cb",
                 "bg": "#000000",
                 "order": 2
-            },
-            "weapon": {
-                "range": "melee",
-                "power_bonus": 2
             }
         }
     ],

@@ -41,20 +41,20 @@ pub fn get_mob(name: &str) -> Option<mob_structs::MobRaw> {
     i.map(|i| raw_manager.raws.mobs[i].clone())
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum SpawnType {
     AtPosition(Position),
 }
 
 /// Spawns a new item.
 ///
-/// # Panics
-/// Panics if the item with the given name is not found.
-pub fn spawn_named_item(commands: &mut Commands, name: &str, spawn_type: SpawnType) {
-    let item = get_item(name).expect("could not find item");
+/// Returns `Ok` if success or `None` if an item with this name does not exist.
+pub fn try_spawn_named_item(commands: &mut Commands, name: &str, pos: SpawnType) -> Option<()> {
+    let item = get_item(name)?;
 
     let mut e = commands.spawn();
 
-    match spawn_type {
+    match pos {
         SpawnType::AtPosition(pos) => {
             e.insert(pos);
         }
@@ -75,16 +75,24 @@ pub fn spawn_named_item(commands: &mut Commands, name: &str, spawn_type: SpawnTy
     if let Some(_weapon) = &item.weapon {
         todo!("weapons");
     }
+
+    Some(())
 }
 
-/// Spawns a new entity.
+/// Spawns a new mob.
 ///
-/// # Panics
-/// Panics if the entity with the given name is not found.
-pub fn spawn_named_entity(commands: &mut Commands, name: &str, position: Position) {
-    let mob = get_mob(name).expect("could not find mob");
+/// Returns the spawned [`MobRaw`] or `None` if an item with this name does not exist.
+pub fn try_spawn_named_mob(commands: &mut Commands, name: &str, position: SpawnType) -> Option<()> {
+    let mob = get_mob(name)?;
 
     let mut e = commands.spawn();
+
+    #[allow(clippy::infallible_destructuring_match)]
+    let position = match position {
+        SpawnType::AtPosition(pos) => pos,
+        /* Uncomment this once more SpawnType variants are added.
+         * _ => panic!("pos must be a SpawnType::AtPosition for mob"), */
+    };
 
     e.insert_bundle(MobBundle {
         mob: Mob,
@@ -95,4 +103,20 @@ pub fn spawn_named_entity(commands: &mut Commands, name: &str, position: Positio
         blocks_tile: BlocksTile,
         combat_stats: mob.stats,
     });
+
+    Some(())
+}
+
+/// Spawns a new entity.
+///
+/// # Panics
+/// Panics if the entity with the given name is not found.
+pub fn spawn_named_entity(commands: &mut Commands, name: &str, pos: SpawnType) {
+    if try_spawn_named_item(commands, name, pos).is_some()
+        || try_spawn_named_mob(commands, name, pos).is_some()
+    {
+        // Success!
+    } else {
+        panic!("could not spawn entity with name {}", name);
+    }
 }
