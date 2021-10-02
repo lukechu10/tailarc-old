@@ -85,7 +85,7 @@ impl InitialMapBuilder for CellularAutomata {
                 }
             }
 
-            build_data.map.tiles = newtiles.clone();
+            build_data.map.tiles = newtiles;
         }
     }
 }
