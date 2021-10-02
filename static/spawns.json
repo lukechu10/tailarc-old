@@ -19,7 +19,7 @@
             "name": "Goblin",
             "renderable": {
                 "glyph": "g",
-                "fg": "#FF0000",
+                "fg": "#ff0000",
                 "bg": "#000000",
                 "order": 1
             },
@@ -37,10 +37,10 @@
             "gold": "1d6"
         },
         {
-            "name": "Orc",
+            "name": "Pink Alien",
             "renderable": {
-                "glyph": "o",
-                "fg": "#FF0000",
+                "glyph": "p",
+                "fg": "#eb4034",
                 "bg": "#000000",
                 "order": 1
             },
@@ -54,7 +54,6 @@
                 "defense": 1,
                 "power": 4
             },
-            "faction": "Cave Goblins",
             "gold": "1d6"
         }
     ]

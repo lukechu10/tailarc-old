@@ -241,15 +241,10 @@ fn main() {
 /// Initialization for entities and resources.
 fn init(mut commands: Commands) {
     use components::{CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed};
-    use map_builders::room_based_spawner::RoomBasedSpawner;
-    use map_builders::room_based_starting_position::RoomBasedStartingPosition;
-    use map_builders::simple_map::SimpleMapBuilder;
-    use map_builders::MapBuilderChain;
+    use map_builders::{CellularAutomata, CullUnreachable, MapBuilderChain};
 
     // Generate map.
-    let mut builder = MapBuilderChain::new(100, 100, 1, SimpleMapBuilder)
-        .with(RoomBasedStartingPosition)
-        .with(RoomBasedSpawner);
+    let mut builder = MapBuilderChain::new(100, 100, 1, CellularAutomata).with(CullUnreachable);
 
     let map = builder.build_map();
     let starting_position = builder.starting_position();

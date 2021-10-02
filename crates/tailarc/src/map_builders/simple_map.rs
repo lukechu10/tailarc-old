@@ -5,9 +5,9 @@ use super::{
     MapBuilder, Rect,
 };
 
-pub struct SimpleMapBuilder;
+pub struct SimpleMap;
 
-impl SimpleMapBuilder {
+impl SimpleMap {
     pub fn new_map_rooms_and_corridors(&mut self, build_data: &mut MapBuilder) {
         const MIN_SIZE: u32 = 6;
         const MAX_SIZE: u32 = 10;
@@ -51,7 +51,7 @@ impl SimpleMapBuilder {
     }
 }
 
-impl InitialMapBuilder for SimpleMapBuilder {
+impl InitialMapBuilder for SimpleMap {
     fn build_map(&mut self, build_data: &mut MapBuilder) {
         self.new_map_rooms_and_corridors(build_data);
     }

@@ -24,7 +24,7 @@ impl MetaMapBuilder for RoomBasedSpawner {
             } else {
                 build_data
                     .spawn_list
-                    .push((Position { x, y }, "Orc".to_string()));
+                    .push((Position { x, y }, "Pink Alien".to_string()));
             }
         }
     }

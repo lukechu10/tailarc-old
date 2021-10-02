@@ -1,14 +1,23 @@
+mod cellular_automata;
 mod common;
-pub mod room_based_spawner;
-pub mod room_based_starting_position;
-pub mod simple_map;
+mod cull_unreachable;
+mod room_based_spawner;
+mod room_based_starting_position;
+mod simple_map;
 
 use bevy_ecs::prelude::Commands;
-use common::*;
 
 use crate::components::Position;
 use crate::map::Map;
 use crate::raws::spawn_named_entity;
+
+use self::common::*;
+
+pub use self::cellular_automata::CellularAutomata;
+pub use self::cull_unreachable::CullUnreachable;
+pub use self::room_based_spawner::RoomBasedSpawner;
+pub use self::room_based_starting_position::RoomBasedStartingPosition;
+pub use self::simple_map::SimpleMap;
 
 pub struct MapBuilder {
     pub map: Map,
