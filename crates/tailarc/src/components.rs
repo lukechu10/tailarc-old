@@ -139,7 +139,8 @@ pub struct InBackpack {
     pub owner: Entity,
 }
 
-/// An item that has an effect when drunk.
-pub struct Potion {
-    pub heal_amount: i32,
+/// An item that has an effect when consumed.
+#[derive(Debug, Deserialize, Clone, Copy)]
+pub struct ConsumableEffects {
+    pub heal: Option<i32>,
 }

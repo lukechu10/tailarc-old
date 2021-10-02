@@ -10,6 +10,7 @@ use serde::Deserialize;
 
 use crate::components::{BlocksTile, EntityName, Mob, MobBundle, Position, Viewshed};
 
+use self::item_structs::Consumable;
 pub use self::manager::RAW_MANAGER;
 
 /// The `/static` directory.
@@ -67,8 +68,8 @@ pub fn try_spawn_named_item(commands: &mut Commands, name: &str, pos: SpawnType)
     e.insert(crate::components::Item);
 
     // Consumable.
-    if let Some(_consumable) = &item.consumable {
-        todo!("consumables");
+    if let Some(Consumable { effects }) = &item.consumable {
+        e.insert(*effects);
     }
 
     // Weapon.

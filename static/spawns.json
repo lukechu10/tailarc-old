@@ -7,6 +7,11 @@
                 "fg": "#f542cb",
                 "bg": "#000000",
                 "order": 2
+            },
+            "consumable": {
+                "effects": {
+                    "heal": 10
+                }
             }
         }
     ],
