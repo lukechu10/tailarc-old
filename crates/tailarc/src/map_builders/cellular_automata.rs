@@ -5,6 +5,9 @@ use crate::map::Tile;
 
 use super::InitialMapBuilder;
 
+/// Number of iterations to apply cellular automata to the map.
+const NUM_ITERATIONS: usize = 20;
+
 pub struct CellularAutomata;
 
 impl InitialMapBuilder for CellularAutomata {
@@ -36,5 +39,53 @@ impl InitialMapBuilder for CellularAutomata {
                 .xy_idx(starting_position.x as u32, starting_position.y as u32);
         }
         build_data.starting_position = Some(starting_position);
+
+        // Now we iteratively apply cellular automata rules.
+        for _i in 0..NUM_ITERATIONS {
+            let mut newtiles = build_data.map.tiles.clone();
+
+            for y in 1..build_data.map.height - 1 {
+                for x in 1..build_data.map.width - 1 {
+                    let idx = build_data.map.xy_idx(x, y);
+                    let mut neighbors = 0;
+                    if build_data.map.tiles[idx - 1] == Tile::Wall {
+                        neighbors += 1;
+                    }
+                    if build_data.map.tiles[idx + 1] == Tile::Wall {
+                        neighbors += 1;
+                    }
+                    if build_data.map.tiles[idx - build_data.map.width as usize] == Tile::Wall {
+                        neighbors += 1;
+                    }
+                    if build_data.map.tiles[idx + build_data.map.width as usize] == Tile::Wall {
+                        neighbors += 1;
+                    }
+                    if build_data.map.tiles[idx - (build_data.map.width as usize - 1)] == Tile::Wall
+                    {
+                        neighbors += 1;
+                    }
+                    if build_data.map.tiles[idx - (build_data.map.width as usize + 1)] == Tile::Wall
+                    {
+                        neighbors += 1;
+                    }
+                    if build_data.map.tiles[idx + (build_data.map.width as usize - 1)] == Tile::Wall
+                    {
+                        neighbors += 1;
+                    }
+                    if build_data.map.tiles[idx + (build_data.map.width as usize + 1)] == Tile::Wall
+                    {
+                        neighbors += 1;
+                    }
+
+                    if neighbors > 4 || neighbors == 0 {
+                        newtiles[idx] = Tile::Wall;
+                    } else {
+                        newtiles[idx] = Tile::Floor;
+                    }
+                }
+            }
+
+            build_data.map.tiles = newtiles.clone();
+        }
     }
 }

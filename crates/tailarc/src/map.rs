@@ -9,8 +9,6 @@ use bracket_lib::prelude::*;
 pub enum Tile {
     Wall,
     Floor,
-    BrickPath,
-    Grass,
 }
 
 /// Represents a single tile of the map and its properties.
