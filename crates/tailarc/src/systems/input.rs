@@ -1,9 +1,12 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{CombatStats, Mob, Player, Position, Viewshed, WantsToMelee};
+use crate::components::{CombatStats, Item, Mob, Player, Position, Viewshed, WantsToMelee};
+use crate::gamelog::GameLog;
 use crate::map::Map;
 use crate::RunState;
+
+use super::inventory::pickup_item;
 
 /// Get and update player position from input.
 ///
@@ -12,11 +15,25 @@ pub fn player_input_system(
     mut commands: Commands,
     bterm: Res<BTerm>,
     map: Res<Map>,
+    game_log: Res<GameLog>,
     mut state: ResMut<State<RunState>>,
     mut player: Query<(Entity, &mut Position, &mut Viewshed, &CombatStats), With<Player>>,
     enemies: Query<(Entity, &CombatStats), With<Mob>>,
+    items: Query<(Entity, &Item)>,
 ) {
     let (player_entity, mut player_pos, mut viewshed, _combat_stats) = player.single_mut().unwrap();
+
+    // Pickup item.
+    if bterm.key == Some(VirtualKeyCode::G) {
+        pickup_item(
+            &mut commands,
+            *player_pos,
+            player_entity,
+            &map,
+            &game_log,
+            items,
+        );
+    }
 
     let mut delta_x = 0;
     let mut delta_y = 0;

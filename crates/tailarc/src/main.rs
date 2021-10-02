@@ -1,4 +1,5 @@
 #![allow(clippy::type_complexity)]
+#![allow(clippy::too_many_arguments)]
 
 pub mod components;
 pub mod deserialize;
@@ -242,10 +243,12 @@ fn main() {
 /// Initialization for entities and resources.
 fn init(mut commands: Commands) {
     use components::{CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed};
-    use map_builders::{CellularAutomata, CullUnreachable, MapBuilderChain};
+    use map_builders::{MapBuilderChain, RoomBasedSpawner, RoomBasedStartingPosition, SimpleMap};
 
     // Generate map.
-    let mut builder = MapBuilderChain::new(100, 100, 1, CellularAutomata).with(CullUnreachable);
+    let mut builder = MapBuilderChain::new(100, 100, 1, SimpleMap)
+        .with(RoomBasedSpawner)
+        .with(RoomBasedStartingPosition);
 
     let map = builder.build_map();
     let starting_position = builder.starting_position();

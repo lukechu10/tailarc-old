@@ -4,6 +4,7 @@ mod cull_unreachable;
 mod room_based_spawner;
 mod room_based_starting_position;
 mod simple_map;
+mod spawner;
 
 use bevy_ecs::prelude::Commands;
 

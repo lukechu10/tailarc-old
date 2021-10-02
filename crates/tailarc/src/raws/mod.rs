@@ -6,10 +6,11 @@ mod mob_structs;
 
 use bevy_ecs::prelude::Commands;
 use include_dir::{include_dir, Dir};
-use manager::RAW_MANAGER;
 use serde::Deserialize;
 
 use crate::components::{BlocksTile, EntityName, Mob, MobBundle, Position, Viewshed};
+
+pub use self::manager::RAW_MANAGER;
 
 /// The `/static` directory.
 pub static STATIC: Dir = include_dir!("../../static");

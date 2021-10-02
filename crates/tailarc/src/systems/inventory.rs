@@ -2,6 +2,29 @@ use bevy_ecs::prelude::*;
 
 use crate::components::{EntityName, InBackpack, Item, Player, Position, WantsToPickupItem};
 use crate::gamelog::GameLog;
+use crate::map::Map;
+
+pub fn pickup_item(
+    commands: &mut Commands,
+    pos: Position,
+    player_entity: Entity,
+    map: &Map,
+    game_log: &GameLog,
+    items: Query<(Entity, &Item)>,
+) {
+    let idx = map.xy_idx(pos.x as u32, pos.y as u32);
+    for &content in &map.tile_content[idx] {
+        if let Ok((item, _)) = items.get(content) {
+            commands
+                .entity(player_entity)
+                .insert(WantsToPickupItem { item });
+            return;
+        }
+    }
+
+    // If we didn't find an item, display a message.
+    game_log.add_entry("There is nothing to pick up here");
+}
 
 /// Iterates over all entities with [`WantsToPickupItem`] component and collects these items by
 /// adding a [`InBackpack`] component to it.

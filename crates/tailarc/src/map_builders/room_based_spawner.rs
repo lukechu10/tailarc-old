@@ -1,7 +1,4 @@
-use rand::{thread_rng, Rng};
-
-use crate::components::Position;
-
+use super::spawner::spawn_room;
 use super::{MapBuilder, MetaMapBuilder};
 
 pub struct RoomBasedSpawner;
@@ -13,19 +10,8 @@ impl MetaMapBuilder for RoomBasedSpawner {
             .as_ref()
             .expect("rooms required for RoomBasedSpawner");
 
-        let mut rng = thread_rng();
-
         for room in rooms.iter().skip(1) {
-            let (x, y) = room.center();
-            if rng.gen() {
-                build_data
-                    .spawn_list
-                    .push((Position { x, y }, "Goblin".to_string()));
-            } else {
-                build_data
-                    .spawn_list
-                    .push((Position { x, y }, "Pink Alien".to_string()));
-            }
+            spawn_room(&build_data.map, &mut build_data.spawn_list, room, 4, 4);
         }
     }
 }
