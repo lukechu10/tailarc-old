@@ -71,12 +71,12 @@ pub struct PlayerBundle {
     pub combat_stats: CombatStats,
 }
 
-/// Monster entity.
-pub struct Monster;
+/// Mob entity.
+pub struct Mob;
 
 #[derive(Bundle)]
-pub struct MonsterBundle {
-    pub monster: Monster,
+pub struct MobBundle {
+    pub mob: Mob,
     pub name: EntityName,
     pub position: Position,
     pub renderable: Renderable,

@@ -5,7 +5,7 @@ use serde::Deserialize;
 use crate::components::Renderable;
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct Item {
+pub struct ItemRaw {
     pub name: String,
     pub renderable: Option<Renderable>,
     pub weapon: Option<Weapon>,

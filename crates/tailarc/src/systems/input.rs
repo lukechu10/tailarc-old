@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{CombatStats, Monster, Player, Position, Viewshed, WantsToMelee};
+use crate::components::{CombatStats, Mob, Player, Position, Viewshed, WantsToMelee};
 use crate::map::Map;
 use crate::RunState;
 
@@ -14,7 +14,7 @@ pub fn player_input_system(
     map: Res<Map>,
     mut state: ResMut<State<RunState>>,
     mut player: Query<(Entity, &mut Position, &mut Viewshed, &CombatStats), With<Player>>,
-    enemies: Query<(Entity, &CombatStats), With<Monster>>,
+    enemies: Query<(Entity, &CombatStats), With<Mob>>,
 ) {
     let (player_entity, mut player_pos, mut viewshed, _combat_stats) = player.single_mut().unwrap();
 

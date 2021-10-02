@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{EntityName, Monster, Player, Position, Viewshed, WantsToMelee};
+use crate::components::{EntityName, Mob, Player, Position, Viewshed, WantsToMelee};
 use crate::map::Map;
 
 pub fn monster_ai_system(
@@ -9,7 +9,7 @@ pub fn monster_ai_system(
     mut map: ResMut<Map>,
     mut set: QuerySet<(
         Query<(Entity, &Position), With<Player>>,
-        Query<(Entity, &mut Viewshed, &mut Position, &EntityName), With<Monster>>,
+        Query<(Entity, &mut Viewshed, &mut Position, &EntityName), With<Mob>>,
     )>,
 ) {
     let (player_entity, &player_pos) = set.q0().single().unwrap();

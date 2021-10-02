@@ -8,7 +8,7 @@ use common::*;
 
 use crate::components::Position;
 use crate::map::Map;
-use crate::raws::{spawn_named_entity, SpawnType};
+use crate::raws::spawn_named_entity;
 
 pub struct MapBuilder {
     pub map: Map,
@@ -71,7 +71,7 @@ impl MapBuilderChain {
 
     pub fn spawn_entities(&mut self, commands: &mut Commands) {
         for entity in &self.build_data.spawn_list {
-            spawn_named_entity(commands, &entity.1, SpawnType::AtPosition(entity.0));
+            spawn_named_entity(commands, &entity.1, entity.0);
         }
     }
 }

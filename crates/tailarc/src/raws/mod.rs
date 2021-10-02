@@ -9,15 +9,15 @@ use include_dir::{include_dir, Dir};
 use manager::RAW_MANAGER;
 use serde::Deserialize;
 
-use crate::components::{EntityName, Position};
+use crate::components::{BlocksTile, EntityName, Mob, MobBundle, Position, Viewshed};
 
 /// The `/static` directory.
 pub static STATIC: Dir = include_dir!("../../static");
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Raws {
-    pub items: Vec<item_structs::Item>,
-    pub mobs: Vec<mob_structs::Mob>,
+    pub items: Vec<item_structs::ItemRaw>,
+    pub mobs: Vec<mob_structs::MobRaw>,
 }
 
 /// Loads the raws from the `/static/spawns.json` file into memory.
@@ -28,13 +28,13 @@ pub fn load_spawns() {
     RAW_MANAGER.write().load(raws);
 }
 
-pub fn get_item(name: &str) -> Option<item_structs::Item> {
+pub fn get_item(name: &str) -> Option<item_structs::ItemRaw> {
     let raw_manager = RAW_MANAGER.read();
     let i = raw_manager.item_index.get(name).copied();
     i.map(|i| raw_manager.raws.items[i].clone())
 }
 
-pub fn get_mob(name: &str) -> Option<mob_structs::Mob> {
+pub fn get_mob(name: &str) -> Option<mob_structs::MobRaw> {
     let raw_manager = RAW_MANAGER.read();
     let i = raw_manager.mob_index.get(name).copied();
     i.map(|i| raw_manager.raws.mobs[i].clone())
@@ -80,28 +80,18 @@ pub fn spawn_named_item(commands: &mut Commands, name: &str, spawn_type: SpawnTy
 ///
 /// # Panics
 /// Panics if the entity with the given name is not found.
-pub fn spawn_named_entity(commands: &mut Commands, name: &str, spawn_type: SpawnType) {
+pub fn spawn_named_entity(commands: &mut Commands, name: &str, position: Position) {
     let mob = get_mob(name).expect("could not find mob");
 
     let mut e = commands.spawn();
 
-    match spawn_type {
-        SpawnType::AtPosition(pos) => {
-            e.insert(pos);
-        }
-    }
-
-    // Renderable.
-    if let Some(renderable) = &mob.renderable {
-        e.insert(*renderable);
-    }
-
-    if mob.blocks_tile {
-        e.insert(crate::components::BlocksTile);
-    }
-
-    e.insert(mob.stats);
-    e.insert(crate::components::Viewshed::new(mob.vision_range));
-    e.insert(EntityName { name: mob.name });
-    e.insert(crate::components::Monster);
+    e.insert_bundle(MobBundle {
+        mob: Mob,
+        name: EntityName { name: mob.name },
+        position,
+        renderable: mob.renderable,
+        viewshed: Viewshed::new(mob.vision_range),
+        blocks_tile: BlocksTile,
+        combat_stats: mob.stats,
+    });
 }
