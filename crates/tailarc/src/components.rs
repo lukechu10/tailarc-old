@@ -79,6 +79,7 @@ pub struct PlayerBundle {
     pub renderable: Renderable,
     pub viewshed: Viewshed,
     pub combat_stats: CombatStats,
+    pub equipment: Equipment,
 }
 
 /// Mob entity.
@@ -163,4 +164,21 @@ pub struct WantsToUseItem {
 pub struct WantsToDropItem {
     /// `item` must have an [`Item`] component.
     pub item: Entity,
+}
+
+#[derive(Debug, Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum EquipmentSlot {
+    Melee,
+    Shield,
+}
+
+#[derive(Debug, Deserialize, Clone, Copy)]
+pub struct Equippable {
+    pub slot: EquipmentSlot,
+}
+
+pub struct Equipment {
+    pub melee: Option<Entity>,
+    pub shield: Option<Entity>,
 }

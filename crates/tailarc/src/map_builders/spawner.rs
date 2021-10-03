@@ -65,13 +65,13 @@ pub fn spawn_room(
     for idx in item_spawn_points.iter() {
         let x = *idx % map.width as usize;
         let y = *idx / map.height as usize;
-        spawn_list.push((
+        spawn_random_item(
+            spawn_list,
             Position {
                 x: x as i32,
                 y: y as i32,
             },
-            "Health Potion".to_string(),
-        ));
+        );
     }
 }
 
@@ -88,4 +88,19 @@ fn spawn_random_monster(spawn_list: &mut Vec<(Position, String)>, pos: Position)
         .expect("mob_index is not empty");
 
     spawn_list.push((pos, mob.clone()));
+}
+
+/// Spawn a random monster at the specified position.
+fn spawn_random_item(spawn_list: &mut Vec<(Position, String)>, pos: Position) {
+    let mut rng = thread_rng();
+
+    let raw_manager = RAW_MANAGER.read();
+
+    let (item, _) = raw_manager
+        .item_index
+        .iter()
+        .choose(&mut rng)
+        .expect("item_index is not empty");
+
+    spawn_list.push((pos, item.clone()));
 }

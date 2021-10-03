@@ -13,6 +13,18 @@
                     "heal": 10
                 }
             }
+        },
+        {
+            "name": "Dagger",
+            "renderable": {
+                "glyph": "/",
+                "fg": "#42ddf5",
+                "bg": "#000000",
+                "z_index": 1
+            },
+            "equippable": {
+                "slot": "melee"
+            }
         }
     ],
     "mobs": [

@@ -278,7 +278,9 @@ fn main() {
 
 /// Initialization for entities and resources.
 fn init(mut commands: Commands) {
-    use components::{CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed};
+    use components::{
+        CombatStats, EntityName, Equipment, Player, PlayerBundle, Renderable, Viewshed,
+    };
     use map_builders::{MapBuilderChain, RoomBasedSpawner, RoomBasedStartingPosition, SimpleMap};
 
     // Generate map.
@@ -315,6 +317,10 @@ fn init(mut commands: Commands) {
             max_hp: 100,
             defense: 2,
             power: 5,
+        },
+        equipment: Equipment {
+            melee: None,
+            shield: None,
         },
     });
 

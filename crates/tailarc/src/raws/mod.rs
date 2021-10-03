@@ -72,9 +72,9 @@ pub fn try_spawn_named_item(commands: &mut Commands, name: &str, pos: SpawnType)
         e.insert(*effects);
     }
 
-    // Weapon.
-    if let Some(_weapon) = &item.weapon {
-        todo!("weapons");
+    // Equippable.
+    if let Some(equippable) = &item.equippable {
+        e.insert(*equippable);
     }
 
     Some(())
