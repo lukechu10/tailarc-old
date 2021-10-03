@@ -43,6 +43,7 @@ pub fn melee_combat_system(
                             bg: RGB::named(BLACK),
                             fg: RGB::named(ORANGE),
                             glyph: to_cp437('‼'),
+                            z_index: 4, // Particles should always be on the very top.
                         },
                         Duration::from_millis(200),
                     );

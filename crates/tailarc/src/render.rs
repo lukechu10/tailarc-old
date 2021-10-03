@@ -61,7 +61,7 @@ fn wall_glyph(map: &Map, x: i32, y: i32) -> u16 {
 pub fn render_game_system(
     map: Res<Map>,
     mut ctx: ResMut<BTerm>,
-    renderables: Query<(&Renderable, &Position)>,
+    renderables: Query<&Renderable>,
     player: Query<&Position, With<Player>>,
 ) {
     ctx.cls();
@@ -76,37 +76,54 @@ pub fn render_game_system(
     let player_pos = player.single().unwrap();
     let player_screen_pos = (console_width_for_map / 2, console_height_for_map / 2);
 
-    for ((tile, &revealed), &visible) in map
+    for (((tile, &revealed), &visible), contents) in map
         .tiles
         .iter()
         .zip(map.revealed_tiles.iter())
         .zip(map.visible_tiles.iter())
+        .zip(map.tile_content.iter())
     {
         if revealed {
             let glyph;
             let mut fg;
             let bg;
-            match tile {
-                Tile::Wall => {
-                    fg = RGB::from_u8(76, 235, 59);
-                    glyph = wall_glyph(&map, x, y);
-                }
-                Tile::Floor => {
-                    fg = RGB::from_u8(179, 118, 112);
-                    glyph = '.' as u16;
-                }
-            }
-            if visible {
-                // Show bloodstains.
-                let idx = map.xy_idx(x as u32, y as u32);
-                bg = if map.bloodstains.contains(&idx) {
-                    RGB::from_u8(191, 0, 0)
-                } else {
-                    RGB::from_u8(0, 0, 0)
-                };
+
+            // Get the highest renderable object at the current location.
+            let content = contents
+                .iter()
+                .filter_map(|&e| renderables.get(e).ok())
+                .max_by_key(|r| r.z_index);
+
+            if let Some(e) = content {
+                // Draw the renderable.
+                glyph = e.glyph;
+                fg = e.fg;
+                bg = e.bg;
             } else {
-                fg = fg.to_greyscale();
-                bg = RGB::from_u8(0, 0, 0); // Do not show bloodstains if out of sight.
+                // Draw the tile.
+                match tile {
+                    Tile::Wall => {
+                        fg = RGB::from_u8(76, 235, 59);
+                        glyph = wall_glyph(&map, x, y);
+                    }
+                    Tile::Floor => {
+                        fg = RGB::from_u8(179, 118, 112);
+                        glyph = '.' as u16;
+                    }
+                }
+                if visible {
+                    // Show bloodstains.
+                    let idx = map.xy_idx(x as u32, y as u32);
+                    bg = if map.bloodstains.contains(&idx) {
+                        RGB::from_u8(191, 0, 0)
+                    } else {
+                        RGB::from_u8(0, 0, 0)
+                    };
+                } else {
+                    // Gray out what is not visible but previously revealed.
+                    fg = fg.to_greyscale();
+                    bg = RGB::from_u8(0, 0, 0); // Do not show bloodstains if out of sight.
+                }
             }
 
             // Calculate position of tile on screen (relative to position of player).
@@ -133,21 +150,6 @@ pub fn render_game_system(
         RGB::named(WHITE),
         RGB::named(BLACK),
     );
-
-    // Draw renderables.
-    for (renderable, pos) in renderables.iter() {
-        let idx = map.xy_idx(pos.x as u32, pos.y as u32);
-        // Only draw if the tile is visible.
-        if map.visible_tiles[idx] {
-            ctx.set(
-                pos.x - player_pos.x + player_screen_pos.0 as i32,
-                pos.y - player_pos.y + player_screen_pos.1 as i32,
-                renderable.fg,
-                renderable.bg,
-                renderable.glyph,
-            );
-        }
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

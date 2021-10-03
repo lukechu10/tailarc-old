@@ -39,6 +39,16 @@ pub struct Renderable {
     pub fg: RGB,
     #[serde(deserialize_with = "crate::deserialize::rgb_from_hex")]
     pub bg: RGB,
+    /// The order in which this tile should be rendered relative to other tiles.
+    /// Higher values go on top of lower values.
+    ///
+    /// # Values
+    /// * `0`: Default (tile)
+    /// * `1`: Items
+    /// * `2`: Mobs
+    /// * `3`: Player
+    /// * `4`: Particles
+    pub z_index: i32,
 }
 
 /// A component that adds field of view to an entity.

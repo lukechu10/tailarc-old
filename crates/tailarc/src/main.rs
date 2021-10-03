@@ -72,7 +72,7 @@ pub fn next_turn_state_system(
         match *item_menu_result {
             gui::ItemMenuResult::Cancel => state.set(RunState::AwaitingInput).unwrap(),
             gui::ItemMenuResult::NoResponse => {}
-            gui::ItemMenuResult::Selected => todo!(),
+            gui::ItemMenuResult::Selected => state.set(RunState::Player).unwrap(), /* Using an item takes up a turn. */
         }
     } else if *state.current() != RunState::AwaitingInput {
         RunState::advance_state(&mut state);
@@ -279,6 +279,7 @@ fn init(mut commands: Commands) {
             glyph: '@' as u16,
             fg: RGB::named(YELLOW),
             bg: RGB::named(BLACK),
+            z_index: 3,
         },
         viewshed: Viewshed {
             visible_tiles: HashSet::new(),

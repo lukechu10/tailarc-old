@@ -6,7 +6,7 @@
                 "glyph": "¡",
                 "fg": "#f542cb",
                 "bg": "#000000",
-                "order": 2
+                "z_index": 1
             },
             "consumable": {
                 "effects": {
@@ -22,7 +22,7 @@
                 "glyph": "g",
                 "fg": "#ff0000",
                 "bg": "#000000",
-                "order": 1
+                "z_index": 2
             },
             "blocks_tile": true,
             "vision_range": 8,
@@ -33,9 +33,7 @@
                 "hp": 16,
                 "defense": 1,
                 "power": 4
-            },
-            "faction": "Cave Goblins",
-            "gold": "1d6"
+            }
         },
         {
             "name": "Pink Alien",
@@ -43,19 +41,17 @@
                 "glyph": "p",
                 "fg": "#eb4034",
                 "bg": "#000000",
-                "order": 1
+                "z_index": 2
             },
             "blocks_tile": true,
             "vision_range": 8,
-            "movement": "static",
             "attributes": {},
             "stats": {
                 "max_hp": 20,
                 "hp": 20,
                 "defense": 1,
                 "power": 4
-            },
-            "gold": "1d6"
+            }
         }
     ]
 }

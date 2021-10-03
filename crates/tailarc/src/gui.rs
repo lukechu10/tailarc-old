@@ -127,6 +127,14 @@ pub fn render_inventory(
 
     *item_menu_result = match ctx.key {
         Some(VirtualKeyCode::Escape) => ItemMenuResult::Cancel,
+        Some(key) => {
+            let selection = letter_to_option(key);
+            if selection == -1 || selection >= count as i32 {
+                ItemMenuResult::NoResponse
+            } else {
+                ItemMenuResult::Selected
+            }
+        }
         _ => ItemMenuResult::NoResponse,
     };
 }
