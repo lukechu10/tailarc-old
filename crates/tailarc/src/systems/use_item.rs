@@ -28,7 +28,7 @@ pub fn use_item_system(
         // Apply the effect of the item
         if let Some(mut stats) = stats {
             if entity == player_entity {
-                // Display message in game log.
+                // If it is the player that is using the item, display message in game log.
                 game_log.add_entry(format!("You use {}", name.name));
             }
 
