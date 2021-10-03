@@ -33,7 +33,7 @@ pub fn use_item_system(
             }
 
             if let Some(heal) = effect.heal {
-                stats.hp = i32::max(stats.max_hp, stats.hp + heal);
+                stats.hp = i32::min(stats.max_hp, stats.hp + heal);
             }
         } else {
             // Using an item without a CombatStats component does nothing.
