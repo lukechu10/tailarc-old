@@ -159,3 +159,8 @@ pub struct WantsToUseItem {
     /// `item` must have an [`Item`] component.
     pub item: Entity,
 }
+
+pub struct WantsToDropItem {
+    /// `item` must have an [`Item`] component.
+    pub item: Entity,
+}

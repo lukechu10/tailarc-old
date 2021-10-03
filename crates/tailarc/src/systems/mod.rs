@@ -1,6 +1,7 @@
 //! ECS systems.
 
 pub mod damage;
+pub mod drop_item;
 pub mod input;
 pub mod inventory;
 pub mod map_indexing;

@@ -45,6 +45,13 @@ pub fn player_input_system(
         return;
     }
 
+    // Show drop selection.
+    if bterm.key == Some(VirtualKeyCode::D) {
+        // We can unwrap() here because this system is only executed during RunState::AwaitingInput.
+        state.set(RunState::ShowDropItem).unwrap();
+        return;
+    }
+
     let mut delta_x = 0;
     let mut delta_y = 0;
     if bterm.key == Some(VirtualKeyCode::Left) || bterm.key == Some(VirtualKeyCode::H) {

@@ -32,6 +32,7 @@ pub const CONSOLE_TITLE: &str = "Tailarc";
 pub enum RunState {
     MainMenu,
     ShowInventory,
+    ShowDropItem,
     AwaitingInput,
     Player,
     Monster,
@@ -43,6 +44,7 @@ impl RunState {
         let next = match state.current() {
             RunState::MainMenu => None,      // Main menu stays in main menu.
             RunState::ShowInventory => None, // Inventory does not close by itself!
+            RunState::ShowDropItem => None,
             // Game loop.
             RunState::AwaitingInput => Some(RunState::Player),
             RunState::Player => Some(RunState::Monster),
@@ -59,6 +61,7 @@ pub fn next_turn_state_system(
     mut state: ResMut<State<RunState>>,
     main_menu_result: Res<render::MainMenuResult>,
     item_menu_result: Res<gui::ItemMenuResult>,
+    drop_item_result: Res<gui::DropItemResult>,
 ) {
     if *state.current() == RunState::MainMenu {
         if let render::MainMenuResult::Selected { selected } = *main_menu_result {
@@ -73,6 +76,12 @@ pub fn next_turn_state_system(
             gui::ItemMenuResult::Cancel => state.set(RunState::AwaitingInput).unwrap(),
             gui::ItemMenuResult::NoResponse => {}
             gui::ItemMenuResult::Selected => state.set(RunState::Player).unwrap(), /* Using an item takes up a turn. */
+        }
+    } else if *state.current() == RunState::ShowDropItem {
+        match *drop_item_result {
+            gui::DropItemResult::Cancel => state.set(RunState::AwaitingInput).unwrap(),
+            gui::DropItemResult::NoResponse => {}
+            gui::DropItemResult::Selected => state.set(RunState::Player).unwrap(), /* Using an item takes up a turn. */
         }
     } else if *state.current() != RunState::AwaitingInput {
         RunState::advance_state(&mut state);
@@ -180,7 +189,8 @@ fn main() {
         // Handle player actions.
         .add_system_set(
             SystemSet::on_update(RunState::Player)
-                .with_system(systems::use_item::use_item_system.system()),
+                .with_system(systems::use_item::use_item_system.system())
+                .with_system(systems::drop_item::drop_item_system.system()),
         )
         // Run indexing systems after input to ensure that state is in sync.
         // These don't need to be in a separate stage from CoreStage::Update because input doesn't
@@ -242,6 +252,15 @@ fn main() {
             AppStages::CleanupAndRender,
             SystemSet::on_update(RunState::ShowInventory).with_system(
                 gui::render_inventory
+                    .system()
+                    .label(RenderLabel::UiAndParticles)
+                    .after(RenderLabel::Map),
+            ),
+        )
+        .add_system_set_to_stage(
+            AppStages::CleanupAndRender,
+            SystemSet::on_update(RunState::ShowDropItem).with_system(
+                gui::render_drop_item_menu
                     .system()
                     .label(RenderLabel::UiAndParticles)
                     .after(RenderLabel::Map),
@@ -311,6 +330,7 @@ fn init(mut commands: Commands) {
         selected: render::MainMenuSelection::NewGame,
     });
     commands.insert_resource(gui::ItemMenuResult::NoResponse);
+    commands.insert_resource(gui::DropItemResult::NoResponse);
     commands.insert_resource(systems::particle::ParticleBuilder::new());
 
     tracing::info!("Finished initialization");

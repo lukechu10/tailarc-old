@@ -1,7 +1,9 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{CombatStats, EntityName, Item, Owned, Player, WantsToUseItem};
+use crate::components::{
+    CombatStats, EntityName, Item, Owned, Player, WantsToDropItem, WantsToUseItem,
+};
 use crate::gamelog::GameLog;
 use crate::map::Map;
 use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
@@ -142,5 +144,80 @@ pub fn render_inventory(
             }
         }
         _ => ItemMenuResult::NoResponse,
+    };
+}
+
+/// Render drop item menu.
+#[derive(PartialEq, Copy, Clone)]
+pub enum DropItemResult {
+    Cancel,
+    NoResponse,
+    Selected,
+}
+
+pub fn render_drop_item_menu(
+    mut commands: Commands,
+    mut ctx: ResMut<BTerm>,
+    mut item_menu_result: ResMut<DropItemResult>,
+    player: Query<Entity, With<Player>>,
+    items: Query<(Entity, &EntityName, &Owned), With<Item>>,
+) {
+    let player_entity = player.single().unwrap();
+
+    let inventory: Vec<_> = items
+        .iter()
+        .filter(|(_, _, i)| i.owner == player_entity)
+        .collect();
+    let count = inventory.len();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(
+        15,
+        y - 2,
+        31,
+        (count + 3) as i32,
+        RGB::named(WHITE),
+        RGB::named(BLACK),
+    );
+    ctx.print_color(18, y - 2, RGB::named(YELLOW), RGB::named(BLACK), "Drop");
+    ctx.print_color(
+        18,
+        y + count as i32 + 1,
+        RGB::named(YELLOW),
+        RGB::named(BLACK),
+        "ESCAPE to cancel",
+    );
+
+    for (j, (_, name, _)) in inventory.iter().enumerate() {
+        ctx.set(17, y, RGB::named(WHITE), RGB::named(BLACK), to_cp437('('));
+        ctx.set(
+            18,
+            y,
+            RGB::named(YELLOW),
+            RGB::named(BLACK),
+            97 + j as FontCharType,
+        );
+        ctx.set(19, y, RGB::named(WHITE), RGB::named(BLACK), to_cp437(')'));
+
+        ctx.print(21, y, &name.name.to_string());
+        y += 1;
+    }
+
+    *item_menu_result = match ctx.key {
+        Some(VirtualKeyCode::Escape) => DropItemResult::Cancel,
+        Some(key) => {
+            let selection = letter_to_option(key);
+            if selection == -1 || selection >= count as i32 {
+                DropItemResult::NoResponse
+            } else {
+                // Add a WantsToUseItem component to the player with the selected item.
+                let (item, _, _) = inventory[selection as usize];
+                commands
+                    .entity(player_entity)
+                    .insert(WantsToDropItem { item });
+                DropItemResult::Selected
+            }
+        }
+        _ => DropItemResult::NoResponse,
     };
 }
