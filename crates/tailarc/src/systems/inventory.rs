@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::*;
 
-use crate::components::{EntityName, InBackpack, Item, Player, Position, WantsToPickupItem};
+use crate::components::{EntityName, Item, Owned, Player, Position, WantsToPickupItem};
 use crate::gamelog::GameLog;
 use crate::map::Map;
 
@@ -45,7 +45,7 @@ pub fn item_collection_system(
         // Remove the `Position` component from the item.
         commands.entity(target_item).remove::<Position>();
         // Add the `InBackpack` component to the item.
-        commands.entity(target_item).insert(InBackpack { owner });
+        commands.entity(target_item).insert(Owned { owner });
         // Remove the `WantsToPickupItem` component because we already picked the item up.
         commands.entity(owner).remove::<WantsToPickupItem>();
 

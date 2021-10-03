@@ -144,8 +144,8 @@ pub struct WantsToPickupItem {
     pub item: Entity,
 }
 
-/// An entity that is in a backpack.
-pub struct InBackpack {
+/// An entity that is owned by another entity (e.g. an item that is in the player's backpack).
+pub struct Owned {
     pub owner: Entity,
 }
 
@@ -153,4 +153,9 @@ pub struct InBackpack {
 #[derive(Debug, Deserialize, Clone, Copy)]
 pub struct ConsumableEffects {
     pub heal: Option<i32>,
+}
+
+pub struct WantsToUseItem {
+    /// `item` must have an [`Item`] component.
+    pub item: Entity,
 }

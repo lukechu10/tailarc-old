@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
-use crate::components::{CombatStats, EntityName, InBackpack, Item, Player};
+use crate::components::{CombatStats, EntityName, Item, Owned, Player, WantsToUseItem};
 use crate::gamelog::GameLog;
 use crate::map::Map;
 use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
@@ -73,16 +73,17 @@ pub enum ItemMenuResult {
 }
 
 pub fn render_inventory(
+    mut commands: Commands,
     mut ctx: ResMut<BTerm>,
     mut item_menu_result: ResMut<ItemMenuResult>,
     player: Query<Entity, With<Player>>,
-    items: Query<(&EntityName, &InBackpack), With<Item>>,
+    items: Query<(Entity, &EntityName, &Owned), With<Item>>,
 ) {
     let player_entity = player.single().unwrap();
 
     let inventory: Vec<_> = items
         .iter()
-        .filter(|(_, i)| i.owner == player_entity)
+        .filter(|(_, _, i)| i.owner == player_entity)
         .collect();
     let count = inventory.len();
 
@@ -110,7 +111,7 @@ pub fn render_inventory(
         "ESCAPE to cancel",
     );
 
-    for (j, (name, _)) in inventory.into_iter().enumerate() {
+    for (j, (_, name, _)) in inventory.iter().enumerate() {
         ctx.set(17, y, RGB::named(WHITE), RGB::named(BLACK), to_cp437('('));
         ctx.set(
             18,
@@ -132,6 +133,11 @@ pub fn render_inventory(
             if selection == -1 || selection >= count as i32 {
                 ItemMenuResult::NoResponse
             } else {
+                // Add a WantsToUseItem component to the player with the selected item.
+                let (item, _, _) = inventory[selection as usize];
+                commands
+                    .entity(player_entity)
+                    .insert(WantsToUseItem { item });
                 ItemMenuResult::Selected
             }
         }

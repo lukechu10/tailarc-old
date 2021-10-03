@@ -177,6 +177,11 @@ fn main() {
                     .label(UpdateLabel::Input),
             ),
         )
+        // Handle player actions.
+        .add_system_set(
+            SystemSet::on_update(RunState::Player)
+                .with_system(systems::use_item::use_item_system.system()),
+        )
         // Run indexing systems after input to ensure that state is in sync.
         // These don't need to be in a separate stage from CoreStage::Update because input doesn't
         // spawn new entities/components.
