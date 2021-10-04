@@ -20,7 +20,7 @@ pub fn melee_combat_system(
     equipped: Query<(&Equipped, &ItemStats)>,
     mut suffer_damage: Query<&mut SufferDamage>,
 ) {
-    for (attacker, wants_melee, name, stats) in wants_melee.iter() {
+    for (attacker, wants_melee, attacker_name, attacker_stats) in wants_melee.iter() {
         let target = wants_melee.target;
 
         if let Ok((target_stats, target_name, position)) = target_stats.get(target) {
@@ -30,7 +30,7 @@ pub fn melee_combat_system(
                 .filter(|(e, _)| e.by == attacker)
                 .map(|(_, s)| s.power)
                 .sum();
-            let attacker_power = stats.power + attacker_power_bonus;
+            let attacker_power = attacker_stats.power + attacker_power_bonus;
             let target_defense_bonus: i32 = equipped
                 .iter()
                 .filter(|(e, _)| e.by == target)
@@ -42,12 +42,12 @@ pub fn melee_combat_system(
             if damage == 0 {
                 game_log.add_entry(format!(
                     "{} is unable to hurt {}",
-                    name.name, target_name.name
+                    attacker_name.name, target_name.name
                 ));
             } else {
                 game_log.add_entry(format!(
                     "{} hits {} for {} hp",
-                    name.name, target_name.name, damage
+                    attacker_name.name, target_name.name, damage
                 ));
                 SufferDamage::new_damage(&mut commands, &mut suffer_damage, target, damage);
                 if let Some(&position) = position {
@@ -64,7 +64,7 @@ pub fn melee_combat_system(
                 }
             }
         } else {
-            game_log.add_entry(format!("{} hacked at the air!", name.name));
+            game_log.add_entry(format!("{} hacked at the air!", attacker_name.name));
         }
 
         // Remove WantsToMelee component from entity to prevent damage from being applied twice.
