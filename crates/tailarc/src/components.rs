@@ -79,7 +79,6 @@ pub struct PlayerBundle {
     pub renderable: Renderable,
     pub viewshed: Viewshed,
     pub combat_stats: CombatStats,
-    pub equipment: Equipment,
 }
 
 /// Mob entity.
@@ -166,7 +165,7 @@ pub struct WantsToDropItem {
     pub item: Entity,
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum EquipmentSlot {
     Melee,
@@ -178,7 +177,8 @@ pub struct Equippable {
     pub slot: EquipmentSlot,
 }
 
-pub struct Equipment {
-    pub melee: Option<Entity>,
-    pub shield: Option<Entity>,
+pub struct Equipped {
+    pub by: Entity,
+    /// This field should match the `slot` field on [`Equippable`].
+    pub slot: EquipmentSlot,
 }

@@ -1,8 +1,8 @@
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CombatStats, ConsumableEffects, EntityName, Equipment, EquipmentSlot, Equippable, Item, Owned,
-    Player, WantsToUseItem,
+    CombatStats, ConsumableEffects, EntityName, Equippable, Equipped, Item, Owned, Player,
+    WantsToUseItem,
 };
 use crate::gamelog::GameLog;
 
@@ -10,20 +10,16 @@ use crate::gamelog::GameLog;
 pub fn use_item_system(
     mut commands: Commands,
     game_log: Res<GameLog>,
-    mut wants_use: Query<(
-        Entity,
-        &WantsToUseItem,
-        Option<&mut CombatStats>,
-        Option<&mut Equipment>,
-    )>,
+    mut wants_use: Query<(Entity, &WantsToUseItem, Option<&mut CombatStats>)>,
     owned: Query<&Owned>,
     consumables: Query<(Entity, &ConsumableEffects, &EntityName), With<Item>>,
     equippable: Query<(Entity, &Equippable, &EntityName), With<Item>>,
+    equipped: Query<(Entity, &Equipped, &EntityName)>,
     player: Query<Entity, With<Player>>,
 ) {
     let player_entity = player.single().unwrap();
 
-    for (entity, wants_use, stats, equipment) in wants_use.iter_mut() {
+    for (entity, wants_use, stats) in wants_use.iter_mut() {
         let owned = owned
             .get(wants_use.item)
             .expect("cannot use an item that is not owned");
@@ -50,21 +46,36 @@ pub fn use_item_system(
             // Despawn the item since it has been used.
             commands.entity(item).despawn();
         } else if let Ok((item, equippable, name)) = equippable.get(wants_use.item) {
-            if let Some(mut equipment) = equipment {
-                match equippable.slot {
-                    EquipmentSlot::Melee => equipment.melee = Some(item),
-                    EquipmentSlot::Shield => equipment.shield = Some(item),
-                }
-
-                if entity == player_entity {
+            // If another item is already equipped in the slot, remove it.
+            for (equipped_entity, already_equipped, already_equipped_name) in equipped.iter() {
+                if already_equipped.slot == equippable.slot {
+                    commands.entity(equipped_entity).remove::<Equipped>();
+                    // Add it back into the player's inventory.
+                    commands
+                        .entity(equipped_entity)
+                        .insert(Owned { owner: entity });
                     // If it is the player that is using the item, display message in game log.
-                    game_log.add_entry(format!("You equip {}", name.name));
+                    if entity == player_entity {
+                        game_log.add_entry(format!("You unequip {}", already_equipped_name.name));
+                    }
+                    break;
                 }
-            } else {
-                // Using an item without an Equipment component does nothing.
             }
+
+            // If it is the player that is using the item, display message in game log.
+            if entity == player_entity {
+                game_log.add_entry(format!("You equip {}", name.name));
+            }
+
+            // Add the Equipped component to the item and remove the Owned component to prevent
+            // showing up in inventory.
+            commands.entity(item).insert(Equipped {
+                by: entity,
+                slot: equippable.slot,
+            });
+            commands.entity(item).remove::<Owned>();
         } else {
-            panic!("cannot use an item that is not consumable or equippable");
+            game_log.add_entry("You cannot use that item");
         }
 
         // Remove WantsToUseItem component from entity to prevent using the item twice.
