@@ -24,6 +24,24 @@
             },
             "equippable": {
                 "slot": "melee"
+            },
+            "stats": {
+                "power": 2
+            }
+        },
+        {
+            "name": "Shield",
+            "renderable": {
+                "glyph": ")",
+                "fg": "#42ddf5",
+                "bg": "#000000",
+                "z_index": 1
+            },
+            "equippable": {
+                "slot": "shield"
+            },
+            "stats": {
+                "defense": 1
             }
         }
     ],

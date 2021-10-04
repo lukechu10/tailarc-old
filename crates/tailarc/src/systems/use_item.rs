@@ -13,7 +13,7 @@ pub fn use_item_system(
     mut wants_use: Query<(Entity, &WantsToUseItem, Option<&mut CombatStats>)>,
     owned: Query<&Owned>,
     consumables: Query<(Entity, &ConsumableEffects, &EntityName), With<Item>>,
-    equippable: Query<(Entity, &Equippable, &EntityName), With<Item>>,
+    equippables: Query<(Entity, &Equippable, &EntityName), With<Item>>,
     equipped: Query<(Entity, &Equipped, &EntityName)>,
     player: Query<Entity, With<Player>>,
 ) {
@@ -45,7 +45,7 @@ pub fn use_item_system(
             }
             // Despawn the item since it has been used.
             commands.entity(item).despawn();
-        } else if let Ok((item, equippable, name)) = equippable.get(wants_use.item) {
+        } else if let Ok((item, equippable, name)) = equippables.get(wants_use.item) {
             // If another item is already equipped in the slot, remove it.
             for (equipped_entity, already_equipped, already_equipped_name) in equipped.iter() {
                 if already_equipped.slot == equippable.slot {

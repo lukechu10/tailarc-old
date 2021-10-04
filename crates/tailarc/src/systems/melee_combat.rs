@@ -4,7 +4,7 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
 use crate::components::{
-    CombatStats, EntityName, Position, Renderable, SufferDamage, WantsToMelee,
+    CombatStats, EntityName, Equipped, ItemStats, Position, Renderable, SufferDamage, WantsToMelee,
 };
 use crate::gamelog::GameLog;
 
@@ -17,13 +17,27 @@ pub fn melee_combat_system(
     mut particle_builder: ResMut<ParticleBuilder>,
     wants_melee: Query<(Entity, &WantsToMelee, &EntityName, &CombatStats)>,
     target_stats: Query<(&CombatStats, &EntityName, Option<&Position>)>,
+    equipped: Query<(&Equipped, &ItemStats)>,
     mut suffer_damage: Query<&mut SufferDamage>,
 ) {
-    for (entity, wants_melee, name, stats) in wants_melee.iter() {
+    for (attacker, wants_melee, name, stats) in wants_melee.iter() {
         let target = wants_melee.target;
 
         if let Ok((target_stats, target_name, position)) = target_stats.get(target) {
-            let damage = i32::max(0, stats.power - target_stats.defense);
+            // Compute damage, taking into account equipped bonus.
+            let attacker_power_bonus: i32 = equipped
+                .iter()
+                .filter(|(e, _)| e.by == attacker)
+                .map(|(_, s)| s.power)
+                .sum();
+            let attacker_power = stats.power + attacker_power_bonus;
+            let target_defense_bonus: i32 = equipped
+                .iter()
+                .filter(|(e, _)| e.by == target)
+                .map(|(_, s)| s.defense)
+                .sum();
+            let target_defense = target_stats.defense + target_defense_bonus;
+            let damage = i32::max(0, attacker_power - target_defense);
 
             if damage == 0 {
                 game_log.add_entry(format!(
@@ -54,6 +68,6 @@ pub fn melee_combat_system(
         }
 
         // Remove WantsToMelee component from entity to prevent damage from being applied twice.
-        commands.entity(entity).remove::<WantsToMelee>();
+        commands.entity(attacker).remove::<WantsToMelee>();
     }
 }

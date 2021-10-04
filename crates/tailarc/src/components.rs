@@ -182,3 +182,11 @@ pub struct Equipped {
     /// This field should match the `slot` field on [`Equippable`].
     pub slot: EquipmentSlot,
 }
+
+#[derive(Default, Debug, Deserialize, Clone, Copy)]
+pub struct ItemStats {
+    #[serde(default)]
+    pub power: i32,
+    #[serde(default)]
+    pub defense: i32,
+}

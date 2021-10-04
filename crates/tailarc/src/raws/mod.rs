@@ -71,10 +71,13 @@ pub fn try_spawn_named_item(commands: &mut Commands, name: &str, pos: SpawnType)
     if let Some(Consumable { effects }) = &item.consumable {
         e.insert(*effects);
     }
-
     // Equippable.
     if let Some(equippable) = &item.equippable {
         e.insert(*equippable);
+    }
+    // Stats.
+    if let Some(stats) = &item.stats {
+        e.insert(*stats);
     }
 
     Some(())
