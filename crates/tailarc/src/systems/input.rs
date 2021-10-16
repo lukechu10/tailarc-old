@@ -24,7 +24,7 @@ pub fn player_input_system(
     let (player_entity, mut player_pos, mut viewshed, _combat_stats) = player.single_mut().unwrap();
 
     // Pickup item.
-    if bterm.key == Some(VirtualKeyCode::G) {
+    if bterm.key == Some(VirtualKeyCode::Comma) {
         pickup_item(
             &mut commands,
             *player_pos,
