@@ -79,6 +79,7 @@ pub struct PlayerBundle {
     pub renderable: Renderable,
     pub viewshed: Viewshed,
     pub combat_stats: CombatStats,
+    pub can_suffer_damage: CanSufferDamage,
 }
 
 /// Mob entity.
@@ -93,6 +94,7 @@ pub struct MobBundle {
     pub viewshed: Viewshed,
     pub blocks_tile: BlocksTile,
     pub combat_stats: CombatStats,
+    pub can_suffer_damage: CanSufferDamage,
 }
 
 /// A component that indicates that an entity wants to attack.
@@ -104,25 +106,11 @@ pub struct WantsToMelee {
     pub target: Entity,
 }
 
-pub struct SufferDamage {
+/// A component that indicates that an entity can be attacked. This component should always be
+/// attached to the entity, even when it is not being attacked.
+#[derive(Default)]
+pub struct CanSufferDamage {
     pub amount: Vec<i32>,
-}
-
-impl SufferDamage {
-    pub fn new_damage(
-        commands: &mut Commands,
-        query: &mut Query<&mut SufferDamage>,
-        entity: Entity,
-        amount: i32,
-    ) {
-        if let Ok(mut suffer_damage) = query.get_mut(entity) {
-            suffer_damage.amount.push(amount);
-        } else {
-            commands.entity(entity).insert(SufferDamage {
-                amount: vec![amount],
-            });
-        }
-    }
 }
 
 pub struct ParticleLifetime {

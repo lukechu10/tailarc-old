@@ -4,7 +4,8 @@ use bevy_ecs::prelude::*;
 use bracket_lib::prelude::*;
 
 use crate::components::{
-    CombatStats, EntityName, Equipped, ItemStats, Position, Renderable, SufferDamage, WantsToMelee,
+    CanSufferDamage, CombatStats, EntityName, Equipped, ItemStats, Position, Renderable,
+    WantsToMelee,
 };
 use crate::gamelog::GameLog;
 
@@ -16,14 +17,20 @@ pub fn melee_combat_system(
     game_log: Res<GameLog>,
     mut particle_builder: ResMut<ParticleBuilder>,
     wants_melee: Query<(Entity, &WantsToMelee, &EntityName, &CombatStats)>,
-    target_stats: Query<(&CombatStats, &EntityName, Option<&Position>)>,
+    mut target_stats: Query<(
+        &CombatStats,
+        &EntityName,
+        &mut CanSufferDamage,
+        Option<&Position>,
+    )>,
     equipped: Query<(&Equipped, &ItemStats)>,
-    mut suffer_damage: Query<&mut SufferDamage>,
 ) {
     for (attacker, wants_melee, attacker_name, attacker_stats) in wants_melee.iter() {
         let target = wants_melee.target;
 
-        if let Ok((target_stats, target_name, position)) = target_stats.get(target) {
+        if let Ok((target_stats, target_name, mut can_suffer_damage, position)) =
+            target_stats.get_mut(target)
+        {
             // Compute damage, taking into account equipped bonus.
             let attacker_power_bonus: i32 = equipped
                 .iter()
@@ -49,7 +56,7 @@ pub fn melee_combat_system(
                     "{} hits {} for {} hp",
                     attacker_name.name, target_name.name, damage
                 ));
-                SufferDamage::new_damage(&mut commands, &mut suffer_damage, target, damage);
+                can_suffer_damage.amount.push(damage);
                 if let Some(&position) = position {
                     particle_builder.request(
                         position,

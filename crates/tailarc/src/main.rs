@@ -136,8 +136,7 @@ fn main() {
     #[cfg(feature = "trace")]
     tracing_subscriber::fmt::init();
 
-    let mut bterm;
-    bterm = BTermBuilder::simple(CONSOLE_WIDTH, CONSOLE_HEIGHT)
+    let mut bterm = BTermBuilder::simple(CONSOLE_WIDTH, CONSOLE_HEIGHT)
         .unwrap()
         .with_title(CONSOLE_TITLE)
         .build()
@@ -279,7 +278,7 @@ fn main() {
 /// Initialization for entities and resources.
 fn init(mut commands: Commands) {
     use components::{
-        CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed,
+        CanSufferDamage, CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed,
     };
     use map_builders::{MapBuilderChain, RoomBasedSpawner, RoomBasedStartingPosition, SimpleMap};
 
@@ -318,6 +317,7 @@ fn init(mut commands: Commands) {
             defense: 2,
             power: 5,
         },
+        can_suffer_damage: CanSufferDamage::default(),
     });
 
     // Spawn resources.

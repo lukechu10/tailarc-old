@@ -8,7 +8,7 @@ use bevy_ecs::prelude::Commands;
 use include_dir::{include_dir, Dir};
 use serde::Deserialize;
 
-use crate::components::{BlocksTile, EntityName, Mob, MobBundle, Position, Viewshed};
+use crate::components::{BlocksTile, CanSufferDamage, EntityName, Mob, MobBundle, Position, Viewshed};
 
 use self::item_structs::Consumable;
 pub use self::manager::RAW_MANAGER;
@@ -106,6 +106,7 @@ pub fn try_spawn_named_mob(commands: &mut Commands, name: &str, position: SpawnT
         viewshed: Viewshed::new(mob.vision_range),
         blocks_tile: BlocksTile,
         combat_stats: mob.stats,
+        can_suffer_damage: CanSufferDamage::default(),
     });
 
     Some(())
