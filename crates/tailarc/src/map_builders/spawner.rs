@@ -1,3 +1,5 @@
+//! Utilities for spawning entities in levels.
+
 use rand::seq::IteratorRandom;
 use rand::{thread_rng, Rng};
 

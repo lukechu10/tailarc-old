@@ -11,11 +11,12 @@ impl SimpleMap {
     pub fn new_map_rooms_and_corridors(&mut self, build_data: &mut MapBuilder) {
         const MIN_SIZE: u32 = 6;
         const MAX_SIZE: u32 = 10;
+        
+        let mut rng = thread_rng();
 
         let max_rooms = (build_data.map.width * build_data.map.height) / 100;
         let mut rooms = Vec::new();
 
-        let mut rng = thread_rng();
 
         for _ in 0..max_rooms {
             let w = rng.gen_range(MIN_SIZE..MAX_SIZE);

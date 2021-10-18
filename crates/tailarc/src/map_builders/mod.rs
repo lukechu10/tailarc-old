@@ -1,3 +1,6 @@
+//! Code for level generation.
+
+mod bsp_dungeon;
 mod cellular_automata;
 mod common;
 mod cull_unreachable;
@@ -14,6 +17,7 @@ use crate::raws::{spawn_named_entity, SpawnType};
 
 use self::common::*;
 
+pub use self::bsp_dungeon::BspDungeon;
 pub use self::cellular_automata::CellularAutomata;
 pub use self::cull_unreachable::CullUnreachable;
 pub use self::room_based_spawner::RoomBasedSpawner;
@@ -122,5 +126,13 @@ impl Rect {
     /// Returns the position of the center of the rectangle.
     pub fn center(&self) -> (i32, i32) {
         ((self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2)
+    }
+
+    pub fn width(&self) -> i32 {
+        i32::abs(self.x1 - self.x2)
+    }
+
+    pub fn height(&self) -> i32 {
+        i32::abs(self.y1 - self.y2)
     }
 }

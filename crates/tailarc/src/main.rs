@@ -1,3 +1,5 @@
+//! **Tailarc** is a roguelike game written in Rust!
+
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
 
@@ -280,10 +282,10 @@ fn init(mut commands: Commands) {
     use components::{
         CanSufferDamage, CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed,
     };
-    use map_builders::{MapBuilderChain, RoomBasedSpawner, RoomBasedStartingPosition, SimpleMap};
+    use map_builders::{BspDungeon, MapBuilderChain, RoomBasedSpawner, RoomBasedStartingPosition};
 
     // Generate map.
-    let mut builder = MapBuilderChain::new(100, 100, 1, SimpleMap)
+    let mut builder = MapBuilderChain::new(100, 100, 1, BspDungeon)
         .with(RoomBasedSpawner)
         .with(RoomBasedStartingPosition);
 
