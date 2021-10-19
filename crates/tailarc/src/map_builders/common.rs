@@ -1,3 +1,5 @@
+//! Common utilities used by various map builders.
+
 use std::cmp::{max, min};
 
 use crate::map::{Map, Tile};
