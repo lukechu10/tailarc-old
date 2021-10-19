@@ -1,9 +1,11 @@
 //! Code for level generation.
 
+mod area_starting_position;
 mod bsp_dungeon;
 mod cellular_automata;
 mod common;
 mod cull_unreachable;
+mod drunkard;
 mod room_based_spawner;
 mod room_based_starting_position;
 mod simple_map;
@@ -17,9 +19,11 @@ use crate::raws::{spawn_named_entity, SpawnType};
 
 use self::common::*;
 
+pub use self::area_starting_position::{AreaStartingPosition, XStart, YStart};
 pub use self::bsp_dungeon::BspDungeon;
 pub use self::cellular_automata::CellularAutomata;
 pub use self::cull_unreachable::CullUnreachable;
+pub use self::drunkard::{DrunkardSpawnMode, DrunkardsWalk};
 pub use self::room_based_spawner::RoomBasedSpawner;
 pub use self::room_based_starting_position::RoomBasedStartingPosition;
 pub use self::simple_map::SimpleMap;
@@ -42,7 +46,8 @@ pub struct MapBuilderChain {
 }
 
 impl MapBuilderChain {
-    /// Create a new [`MapBuilderChain`] with the specified dimensions, depth, and [`InitialMapBuilder`].
+    /// Create a new [`MapBuilderChain`] with the specified dimensions, depth, and
+    /// [`InitialMapBuilder`].
     pub fn new(
         width: u32,
         height: u32,
