@@ -310,22 +310,13 @@ fn init(mut commands: Commands) {
         CanSufferDamage, CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed,
     };
     use map_builders::{
-        AreaStartingPosition, DrunkardSpawnMode, DrunkardsWalk, MapBuilderChain, XStart, YStart,
+        AreaStartingPosition, CullUnreachable, DrunkardsWalk, MapBuilderChain, XStart, YStart,
     };
 
     // Generate map.
-    let mut builder = MapBuilderChain::new(
-        80,
-        50,
-        1,
-        DrunkardsWalk {
-            floor_percent: 0.5,
-            lifetime: 100,
-            spawn_mode: DrunkardSpawnMode::Random,
-        },
-    )
-    // .with(RoomBasedSpawner)
-    .with(AreaStartingPosition::new(XStart::Center, YStart::Middle));
+    let mut builder = MapBuilderChain::new(80, 50, 1, DrunkardsWalk::winding_passages())
+        .with(AreaStartingPosition::new(XStart::Center, YStart::Middle))
+        .with(CullUnreachable);
 
     let map = builder.build_map();
     let starting_position = builder.starting_position();

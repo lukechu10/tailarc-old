@@ -47,7 +47,7 @@ impl InitialMapBuilder for DrunkardsWalk {
                 match direction {
                     // Up.
                     0 => {
-                        if x > 2 {
+                        if x > 1 {
                             x -= 1
                         }
                     }
@@ -59,7 +59,7 @@ impl InitialMapBuilder for DrunkardsWalk {
                     }
                     // Left.
                     2 => {
-                        if y > 2 {
+                        if y > 1 {
                             y -= 1
                         }
                     }
@@ -81,6 +81,35 @@ impl InitialMapBuilder for DrunkardsWalk {
                 .iter()
                 .filter(|&&x| x == Tile::Floor)
                 .count();
+        }
+    }
+}
+
+impl DrunkardsWalk {
+    /// Open area preset.
+    pub fn open_area() -> Self {
+        Self {
+            spawn_mode: DrunkardSpawnMode::Center,
+            lifetime: 400,
+            floor_percent: 0.5,
+        }
+    }
+
+    /// Open halls preset.
+    pub fn open_halls() -> Self {
+        Self {
+            spawn_mode: DrunkardSpawnMode::Random,
+            lifetime: 400,
+            floor_percent: 0.5,
+        }
+    }
+
+    /// Winding passages preset.
+    pub fn winding_passages() -> Self {
+        Self {
+            spawn_mode: DrunkardSpawnMode::Random,
+            lifetime: 100,
+            floor_percent: 0.4,
         }
     }
 }
