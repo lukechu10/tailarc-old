@@ -4,6 +4,7 @@ use crate::map::Tile;
 
 use super::MetaMapBuilder;
 
+/// Remove areas that are not reachable from the starting position.
 pub struct CullUnreachable;
 
 impl MetaMapBuilder for CullUnreachable {

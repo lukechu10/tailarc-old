@@ -24,6 +24,7 @@ pub use self::room_based_spawner::RoomBasedSpawner;
 pub use self::room_based_starting_position::RoomBasedStartingPosition;
 pub use self::simple_map::SimpleMap;
 
+/// Contains the data used by map builders.
 pub struct MapBuilder {
     pub map: Map,
     pub starting_position: Option<Position>,
@@ -32,6 +33,8 @@ pub struct MapBuilder {
     pub spawn_list: Vec<(Position, String)>,
 }
 
+/// A chain of map builders.
+/// It is composed of an [`InitialMapBuilder`] and a list of [`MetaMapBuilder`]s.
 pub struct MapBuilderChain {
     pub starter: Box<dyn InitialMapBuilder>,
     pub builders: Vec<Box<dyn MetaMapBuilder>>,
@@ -39,6 +42,7 @@ pub struct MapBuilderChain {
 }
 
 impl MapBuilderChain {
+    /// Create a new [`MapBuilderChain`] with the specified dimensions, depth, and [`InitialMapBuilder`].
     pub fn new(
         width: u32,
         height: u32,
