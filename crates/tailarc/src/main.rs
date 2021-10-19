@@ -28,7 +28,29 @@ pub const CONSOLE_WIDTH: u32 = 80;
 /// Height of the console window.
 pub const CONSOLE_HEIGHT: u32 = 60;
 
+/// Title of the console window.
 pub const CONSOLE_TITLE: &str = "Tailarc";
+
+/// If `true`, the entire map will be rendered regardless of whether it is explored. Useful for
+/// debugging.
+///
+/// `true` if built in debug mode with environment variable `DEBUG_MAP_XRAY=1`. Note that the
+/// environment variable is evaluated at compile time, so this is not a runtime check.
+///
+/// TODO: Due to const fn limitations, `DEBUG_MAP_XRAY` will be considered enabled for any arbitrary
+/// value except when it is undefined.
+pub const DEBUG_MAP_XRAY: bool =
+    cfg!(debug_assertions) && matches!(option_env!("DEBUG_MAP_XRAY"), Some(_));
+
+/// If `true`, the player will be given godly stats. Useful for debugging.
+///
+/// `true` if built in debug mode with environment variable `DEBUG_GOD_MODE=1`. Note that the
+/// environment variable is evaluated at compile time, so this is not a runtime check.
+///
+/// TODO: Due to const fn limitations, `DEBUG_GOD_MODE` will be considered enabled for any arbitrary
+/// value except when it is undefined.
+pub const DEBUG_GOD_MODE: bool =
+    cfg!(debug_assertions) && matches!(option_env!("DEBUG_GOD_MODE"), Some(_));
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RunState {
@@ -295,7 +317,22 @@ fn init(mut commands: Commands) {
     // Spawn monsters.
     builder.spawn_entities(&mut commands);
 
-    // Spawn entities.
+    // Spawn player.
+    let combat_stats = if DEBUG_GOD_MODE {
+        CombatStats {
+            hp: 1000,
+            max_hp: 1000,
+            defense: 1000,
+            power: 1000,
+        }
+    } else {
+        CombatStats {
+            hp: 100,
+            max_hp: 100,
+            defense: 2,
+            power: 5,
+        }
+    };
     commands.spawn_bundle(PlayerBundle {
         player: Player,
         name: EntityName {
@@ -313,12 +350,7 @@ fn init(mut commands: Commands) {
             range: 8,
             dirty: true,
         },
-        combat_stats: CombatStats {
-            hp: 100,
-            max_hp: 100,
-            defense: 2,
-            power: 5,
-        },
+        combat_stats,
         can_suffer_damage: CanSufferDamage::default(),
     });
 

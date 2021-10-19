@@ -5,7 +5,7 @@ use bracket_lib::prelude::*;
 
 use crate::components::{Player, Position, Renderable};
 use crate::map::{Map, Tile};
-use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH};
+use crate::{CONSOLE_HEIGHT, CONSOLE_WIDTH, DEBUG_MAP_XRAY};
 
 /// Returns true if the given tile has been revealed and is a wall.
 /// Returns false otherwise.
@@ -83,7 +83,7 @@ pub fn render_game_system(
         .zip(map.visible_tiles.iter())
         .zip(map.tile_content.iter())
     {
-        if revealed {
+        if DEBUG_MAP_XRAY || revealed {
             let glyph;
             let mut fg;
             let bg;
