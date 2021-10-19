@@ -7,6 +7,10 @@ use super::Rect;
 pub fn apply_room_to_map(map: &mut Map, room: &Rect) {
     for y in room.y1 + 1..room.y2 {
         for x in room.x1 + 1..room.x2 {
+            // Make sure room is inside map.
+            debug_assert!(x < map.width as i32);
+            debug_assert!(y < map.height as i32);
+
             let idx = map.xy_idx(x as u32, y as u32);
             map.tiles[idx] = Tile::Floor;
         }

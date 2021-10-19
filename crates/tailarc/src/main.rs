@@ -285,7 +285,7 @@ fn init(mut commands: Commands) {
     use map_builders::{BspDungeon, MapBuilderChain, RoomBasedSpawner, RoomBasedStartingPosition};
 
     // Generate map.
-    let mut builder = MapBuilderChain::new(100, 100, 1, BspDungeon)
+    let mut builder = MapBuilderChain::new(80, 50, 1, BspDungeon)
         .with(RoomBasedSpawner)
         .with(RoomBasedStartingPosition);
 

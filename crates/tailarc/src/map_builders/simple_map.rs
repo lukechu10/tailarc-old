@@ -21,8 +21,8 @@ impl SimpleMap {
         for _ in 0..max_rooms {
             let w = rng.gen_range(MIN_SIZE..MAX_SIZE);
             let h = rng.gen_range(MIN_SIZE..MAX_SIZE);
-            let x = rng.gen_range(1..build_data.map.width - w - 1) - 1;
-            let y = rng.gen_range(1..build_data.map.height - h - 1) - 1;
+            let x = rng.gen_range(1..build_data.map.width - w - 2);
+            let y = rng.gen_range(1..build_data.map.height - h - 2);
             let new_room = Rect::new(x as i32, y as i32, w as i32, h as i32);
             let mut ok = true;
             for other_room in rooms.iter() {

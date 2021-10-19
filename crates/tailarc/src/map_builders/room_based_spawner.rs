@@ -11,7 +11,7 @@ impl MetaMapBuilder for RoomBasedSpawner {
             .expect("rooms required for RoomBasedSpawner");
 
         for room in rooms.iter().skip(1) {
-            spawn_room(&build_data.map, &mut build_data.spawn_list, room, 4, 4);
+            spawn_room(&mut build_data.spawn_list, room, 3, 4);
         }
     }
 }

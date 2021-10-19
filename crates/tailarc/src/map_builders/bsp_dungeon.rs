@@ -40,6 +40,21 @@ impl InitialMapBuilder for BspDungeon {
             }
         }
 
+        // Add in corridors.
+
+        // Sort the rooms by left coordinate.
+        rooms.sort_unstable_by(|a, b| a.x1.cmp(&b.x1));
+
+        for i in 0..rooms.len() - 1 {
+            let room = rooms[i];
+            let next_room = rooms[i + 1];
+            let start_x = room.x1 + rng.gen_range(0..room.width());
+            let start_y = room.y1 + rng.gen_range(0..room.height());
+            let end_x = next_room.x1 + rng.gen_range(0..next_room.width());
+            let end_y = next_room.y1 + rng.gen_range(0..next_room.height());
+            draw_corridor(&mut build_data.map, start_x, start_y, end_x, end_y);
+        }
+
         build_data.rooms = Some(rooms);
     }
 }
@@ -62,13 +77,13 @@ fn add_subrects(rects: &mut Vec<Rect>, r: Rect) {
 }
 
 /// Returns a [`Rect`] with random dimensions that fits inside `r`.
-/// The dimensions are at least 3x3 and at most 10x10.
+/// The dimensions are at least 4x4 and at most 10x10.
 fn get_random_subrect(mut r: Rect, rng: &mut ThreadRng) -> Rect {
     let outer_w = r.width();
     let outer_h = r.height();
 
-    let w = i32::max(3, rng.gen_range(0..i32::min(outer_w, 10))) + 1;
-    let h = i32::max(3, rng.gen_range(0..i32::min(outer_h, 10))) + 1;
+    let w = i32::max(4, rng.gen_range(0..i32::min(outer_w, 10))) + 1;
+    let h = i32::max(4, rng.gen_range(0..i32::min(outer_h, 10))) + 1;
 
     // Shift the rectangle a bit.
     r.x1 += rng.gen_range(0..6);
@@ -103,4 +118,24 @@ fn is_possible(map: &Map, r: Rect) -> bool {
     }
 
     true
+}
+
+fn draw_corridor(map: &mut Map, x1: i32, y1: i32, x2: i32, y2: i32) {
+    let mut x = x1;
+    let mut y = y1;
+
+    while x != x2 || y != y2 {
+        if x < x2 {
+            x += 1;
+        } else if x > x2 {
+            x -= 1;
+        } else if y < y2 {
+            y += 1;
+        } else if y > y2 {
+            y -= 1;
+        }
+
+        let idx = map.xy_idx(x as u32, y as u32);
+        map.tiles[idx] = Tile::Floor;
+    }
 }
