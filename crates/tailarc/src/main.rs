@@ -52,6 +52,7 @@ pub const DEBUG_MAP_XRAY: bool =
 pub const DEBUG_GOD_MODE: bool =
     cfg!(debug_assertions) && matches!(option_env!("DEBUG_GOD_MODE"), Some(_));
 
+/// The current state of the game.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RunState {
     MainMenu,
@@ -121,12 +122,14 @@ pub fn run_if_in_game(state: Res<State<RunState>>) -> ShouldRun {
     }
 }
 
+/// Labels used in [`CoreStage::Update`].
 #[derive(SystemLabel, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UpdateLabel {
     Input,
     Indexing,
 }
 
+/// Labels used in [`AppStages::CleanupAndRender`].
 #[derive(SystemLabel, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RenderLabel {
     Map,
@@ -153,6 +156,7 @@ pub enum AppStages {
     CleanupAndRender,
 }
 
+/// Entrypoint. Code execution starts here.
 fn main() {
     #[cfg(target_arch = "wasm32")]
     console_error_panic_hook::set_once();
@@ -300,6 +304,7 @@ fn main() {
 }
 
 /// Initialization for entities and resources.
+/// TODO: move this into a sub-module.
 fn init(mut commands: Commands) {
     use components::{
         CanSufferDamage, CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed,
