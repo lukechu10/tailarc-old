@@ -15,10 +15,7 @@ pub fn monster_ai_system(
     let (player_entity, &player_pos) = set.q0().single().unwrap();
 
     for (entity, mut viewshed, mut pos, _name) in set.q1_mut().iter_mut() {
-        if viewshed
-            .visible_tiles
-            .contains(&Point::new(player_pos.x, player_pos.y))
-        {
+        if viewshed.visible_tiles.contains(&player_pos) {
             let distance = DistanceAlg::Pythagoras.distance2d(
                 Point::new(pos.x, pos.y),
                 Point::new(player_pos.x, player_pos.y),

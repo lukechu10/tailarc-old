@@ -13,7 +13,6 @@ pub mod raws;
 pub mod render;
 pub mod systems;
 
-use std::collections::HashSet;
 use std::sync::Mutex;
 
 use bevy_app::CoreStage;
@@ -169,13 +168,14 @@ fn main() {
         .with_title(CONSOLE_TITLE)
         .build()
         .unwrap();
-    bterm.with_post_scanlines(true);
+    bterm.with_post_scanlines(false);
 
     // Load the raws.
     raws::load_spawns();
 
     bevy_app::App::build()
         .add_plugin(CorePlugin::default())
+        .add_plugin(components::RegisterComponentsPlugin)
         .add_stage_after(
             CoreStage::Update,
             AppStages::MonsterTurn,
@@ -352,11 +352,7 @@ fn init(mut commands: Commands) {
             bg: RGB::named(BLACK),
             z_index: 3,
         },
-        viewshed: Viewshed {
-            visible_tiles: HashSet::new(),
-            range: 8,
-            dirty: true,
-        },
+        viewshed: Viewshed::new(8),
         combat_stats,
         can_suffer_damage: CanSufferDamage::default(),
     });

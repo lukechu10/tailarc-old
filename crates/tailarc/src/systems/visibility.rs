@@ -12,7 +12,10 @@ pub fn visibility_system(
         if viewshed.dirty {
             viewshed.visible_tiles.clear();
             viewshed.visible_tiles =
-                field_of_view_set(Point::new(pos.x, pos.y), viewshed.range, &*map);
+                field_of_view_set(Point::new(pos.x, pos.y), viewshed.range, &*map)
+                    .into_iter()
+                    .map(|p| Position { x: p.x, y: p.y })
+                    .collect();
             viewshed.visible_tiles.retain(|p| {
                 p.x >= 0 && p.x < map.width as i32 && p.y >= 0 && p.y < map.height as i32
             });

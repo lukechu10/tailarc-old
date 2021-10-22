@@ -1863,6 +1863,8 @@ dependencies = [
  "bevy_bracket_lib",
  "bevy_core",
  "bevy_ecs",
+ "bevy_reflect",
+ "bevy_utils",
  "bracket-lib",
  "console_error_panic_hook",
  "include_dir",
