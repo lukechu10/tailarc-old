@@ -57,6 +57,7 @@ pub enum RunState {
     MainMenu,
     ShowInventory,
     ShowDropItem,
+    SaveGame,
     AwaitingInput,
     Player,
     Monster,
@@ -69,6 +70,7 @@ impl RunState {
             RunState::MainMenu => None,      // Main menu stays in main menu.
             RunState::ShowInventory => None, // Inventory does not close by itself!
             RunState::ShowDropItem => None,
+            RunState::SaveGame => None,
             // Game loop.
             RunState::AwaitingInput => Some(RunState::Player),
             RunState::Player => Some(RunState::Monster),
@@ -175,7 +177,6 @@ fn main() {
 
     bevy_app::App::build()
         .add_plugin(CorePlugin::default())
-        .add_plugin(components::RegisterComponentsPlugin)
         .add_stage_after(
             CoreStage::Update,
             AppStages::MonsterTurn,
@@ -205,6 +206,11 @@ fn main() {
         .add_plugin(BracketLibPlugin::new(bterm))
         // Initialization logic
         .add_startup_system(init.system())
+        // Game saving systems.
+        .add_system_set(
+            SystemSet::on_update(RunState::SaveGame)
+                .with_system(systems::save_game::save_game_system.exclusive_system()),
+        )
         // Handle input first. Input is what triggers the game to update.
         .add_system_set(
             SystemSet::on_update(RunState::AwaitingInput).with_system(
@@ -309,14 +315,12 @@ fn init(mut commands: Commands) {
     use components::{
         CanSufferDamage, CombatStats, EntityName, Player, PlayerBundle, Renderable, Viewshed,
     };
-    use map_builders::{
-        AreaStartingPosition, CullUnreachable, DrunkardsWalk, MapBuilderChain, XStart, YStart,
-    };
+    use map_builders::{BspDungeon, MapBuilderChain, RoomBasedSpawner, RoomBasedStartingPosition};
 
     // Generate map.
-    let mut builder = MapBuilderChain::new(80, 50, 1, DrunkardsWalk::winding_passages())
-        .with(AreaStartingPosition::new(XStart::Center, YStart::Middle))
-        .with(CullUnreachable);
+    let mut builder = MapBuilderChain::new(80, 50, 1, BspDungeon)
+        .with(RoomBasedSpawner)
+        .with(RoomBasedStartingPosition);
 
     let map = builder.build_map();
     let starting_position = builder.starting_position();
