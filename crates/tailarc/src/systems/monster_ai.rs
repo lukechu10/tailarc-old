@@ -39,12 +39,12 @@ pub fn monster_ai_system(
                 let old_idx = map.xy_idx(pos.x as u32, pos.y as u32);
                 map.blocked[old_idx] = false;
 
-                pos.x = path.steps[1] as i32 % map.width as i32;
-                pos.y = path.steps[1] as i32 / map.width as i32;
+                pos.x = path.steps[1] as u32 % map.width;
+                pos.y = path.steps[1] as u32 / map.width;
                 viewshed.dirty = true;
 
                 // Set new blocked state because the monster is now in that tile.
-                let new_idx = map.xy_idx(pos.x as u32, pos.y as u32);
+                let new_idx = map.xy_idx(pos.x, pos.y );
                 map.blocked[new_idx] = true;
             }
         }

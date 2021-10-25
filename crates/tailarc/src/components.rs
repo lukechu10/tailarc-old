@@ -46,8 +46,8 @@ pub fn register_component_types(type_registry: &mut TypeRegistry) {
 #[derive(Debug, Reflect, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[reflect_value(Component, Serialize)]
 pub struct Position {
-    pub x: i32,
-    pub y: i32,
+    pub x: u32,
+    pub y: u32,
 }
 
 /// A component that gives an entity a name.

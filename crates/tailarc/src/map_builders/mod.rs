@@ -110,15 +110,15 @@ pub trait MetaMapBuilder {
 /// Rectangle dimensions and position.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Rect {
-    pub x1: i32,
-    pub x2: i32,
-    pub y1: i32,
-    pub y2: i32,
+    pub x1: u32,
+    pub x2: u32,
+    pub y1: u32,
+    pub y2: u32,
 }
 
 impl Rect {
     /// Create a new [`Rect`] with the specified dimensions.
-    pub fn new(x: i32, y: i32, w: i32, h: i32) -> Self {
+    pub fn new(x: u32, y: u32, w: u32, h: u32) -> Self {
         Rect {
             x1: x,
             y1: y,
@@ -133,15 +133,23 @@ impl Rect {
     }
 
     /// Returns the position of the center of the rectangle.
-    pub fn center(&self) -> (i32, i32) {
+    pub fn center(&self) -> (u32, u32) {
         ((self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2)
     }
 
-    pub fn width(&self) -> i32 {
-        i32::abs(self.x1 - self.x2)
+    pub fn width(&self) -> u32 {
+        if self.x2 > self.x1 {
+            self.x2 - self.x1
+        } else {
+            self.x1 - self.x2
+        }
     }
 
-    pub fn height(&self) -> i32 {
-        i32::abs(self.y1 - self.y2)
+    pub fn height(&self) -> u32 {
+        if self.y2 > self.y1 {
+            self.y2 - self.y1
+        } else {
+            self.y1 - self.y2
+        }
     }
 }

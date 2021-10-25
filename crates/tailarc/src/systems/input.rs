@@ -59,8 +59,8 @@ pub fn player_input_system(
         return;
     }
 
-    let mut delta_x = 0;
-    let mut delta_y = 0;
+    let mut delta_x = 0i32;
+    let mut delta_y = 0i32;
     if bterm.key == Some(VirtualKeyCode::Left) || bterm.key == Some(VirtualKeyCode::H) {
         delta_x -= 1;
     }
@@ -94,12 +94,12 @@ pub fn player_input_system(
     if (delta_x, delta_y) != (0, 0) {
         // Calculate the new position.
         let mut new_position = *player_pos;
-        new_position.x = (new_position.x + delta_x)
+        new_position.x = (new_position.x as i32 + delta_x)
             .max(0)
-            .min(map.width.saturating_sub(1) as i32);
-        new_position.y = (new_position.y + delta_y)
+            .min(map.width.saturating_sub(1) as i32) as u32;
+        new_position.y = (new_position.y as i32 + delta_y)
             .max(0)
-            .min(map.height.saturating_sub(1) as i32);
+            .min(map.height.saturating_sub(1) as i32) as u32;
 
         let idx = map.xy_idx(new_position.x as u32, new_position.y as u32);
 

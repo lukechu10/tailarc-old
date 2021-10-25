@@ -22,8 +22,8 @@ impl InitialMapBuilder for BspDungeon {
         let mut rects = vec![Rect::new(
             2,
             2,
-            build_data.map.width as i32 - 5,
-            build_data.map.height as i32 - 5,
+            build_data.map.width - 5,
+            build_data.map.height - 5,
         )];
         let first_room = rects[0];
         add_subrects(&mut rects, first_room);
@@ -67,8 +67,8 @@ impl InitialMapBuilder for BspDungeon {
 fn add_subrects(rects: &mut Vec<Rect>, r: Rect) {
     let w = r.width();
     let h = r.height();
-    let half_w = i32::max(w / 2, 1);
-    let half_h = i32::max(h / 2, 1);
+    let half_w = u32::max(w / 2, 1);
+    let half_h = u32::max(h / 2, 1);
 
     rects.push(Rect::new(r.x1, r.y1, half_w, half_h));
     rects.push(Rect::new(r.x1, r.y1 + half_h, half_w, half_h));
@@ -82,8 +82,8 @@ fn get_random_subrect(mut r: Rect, rng: &mut ThreadRng) -> Rect {
     let outer_w = r.width();
     let outer_h = r.height();
 
-    let w = i32::max(4, rng.gen_range(0..i32::min(outer_w, 10))) + 1;
-    let h = i32::max(4, rng.gen_range(0..i32::min(outer_h, 10))) + 1;
+    let w = u32::max(4, rng.gen_range(0..u32::min(outer_w, 10))) + 1;
+    let h = u32::max(4, rng.gen_range(0..u32::min(outer_h, 10))) + 1;
 
     // Shift the rectangle a bit.
     r.x1 += rng.gen_range(0..6);
@@ -106,10 +106,10 @@ fn is_possible(map: &Map, r: Rect) -> bool {
     for y in expanded.y1..expanded.y2 {
         for x in expanded.x1..expanded.x2 {
             // If out of range, can't build.
-            if x > map.width as i32 - 2 || y > map.height as i32 - 2 || x < 1 || y < 1 {
+            if x > map.width - 2 || y > map.height - 2 || x < 1 || y < 1 {
                 return false;
             } else {
-                let idx = map.xy_idx(x as u32, y as u32);
+                let idx = map.xy_idx(x, y);
                 if map.tiles[idx] != Tile::Wall {
                     return false;
                 }
@@ -120,7 +120,7 @@ fn is_possible(map: &Map, r: Rect) -> bool {
     true
 }
 
-fn draw_corridor(map: &mut Map, x1: i32, y1: i32, x2: i32, y2: i32) {
+fn draw_corridor(map: &mut Map, x1: u32, y1: u32, x2: u32, y2: u32) {
     let mut x = x1;
     let mut y = y1;
 
@@ -135,7 +135,7 @@ fn draw_corridor(map: &mut Map, x1: i32, y1: i32, x2: i32, y2: i32) {
             y -= 1;
         }
 
-        let idx = map.xy_idx(x as u32, y as u32);
+        let idx = map.xy_idx(x, y);
         map.tiles[idx] = Tile::Floor;
     }
 }

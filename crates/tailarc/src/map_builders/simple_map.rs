@@ -11,19 +11,18 @@ impl SimpleMap {
     pub fn new_map_rooms_and_corridors(&mut self, build_data: &mut MapBuilder) {
         const MIN_SIZE: u32 = 6;
         const MAX_SIZE: u32 = 10;
-        
+
         let mut rng = thread_rng();
 
         let max_rooms = (build_data.map.width * build_data.map.height) / 100;
         let mut rooms = Vec::new();
-
 
         for _ in 0..max_rooms {
             let w = rng.gen_range(MIN_SIZE..MAX_SIZE);
             let h = rng.gen_range(MIN_SIZE..MAX_SIZE);
             let x = rng.gen_range(1..build_data.map.width - w - 2);
             let y = rng.gen_range(1..build_data.map.height - h - 2);
-            let new_room = Rect::new(x as i32, y as i32, w as i32, h as i32);
+            let new_room = Rect::new(x, y, w, h);
             let mut ok = true;
             for other_room in rooms.iter() {
                 if new_room.intersect(other_room) {

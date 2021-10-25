@@ -26,8 +26,8 @@ impl InitialMapBuilder for CellularAutomata {
 
         // Find a starting point; start at the middle and walk left until we find an open tile.
         let mut starting_position = Position {
-            x: (build_data.map.width / 2) as i32,
-            y: (build_data.map.height / 2) as i32,
+            x: build_data.map.width / 2,
+            y: build_data.map.height / 2,
         };
         let mut start_idx = build_data
             .map

@@ -66,8 +66,8 @@ impl MetaMapBuilder for AreaStartingPosition {
             .0;
 
         build_data.starting_position = Some(Position {
-            x: closest_idx as i32 % build_data.map.width as i32,
-            y: closest_idx as i32 / build_data.map.width as i32,
+            x: closest_idx as u32 % build_data.map.width,
+            y: closest_idx as u32 / build_data.map.width,
         });
     }
 }

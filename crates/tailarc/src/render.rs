@@ -127,8 +127,8 @@ pub fn render_game_system(
             }
 
             // Calculate position of tile on screen (relative to position of player).
-            let x_pos = x - player_pos.x + player_screen_pos.0 as i32;
-            let y_pos = y - player_pos.y + player_screen_pos.1 as i32;
+            let x_pos = x + player_screen_pos.0 as i32 - player_pos.x as i32;
+            let y_pos = y + player_screen_pos.1 as i32 - player_pos.y as i32;
             // We don't need to check if the tile is outside the screen because it is already
             // checked by the `.set` method.
             ctx.set(x_pos, y_pos, fg, bg, glyph);
