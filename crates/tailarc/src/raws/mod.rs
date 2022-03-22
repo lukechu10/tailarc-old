@@ -8,13 +8,15 @@ use bevy_ecs::prelude::Commands;
 use include_dir::{include_dir, Dir};
 use serde::Deserialize;
 
-use crate::components::{BlocksTile, CanSufferDamage, EntityName, Mob, MobBundle, Position, Viewshed};
+use crate::components::{
+    BlocksTile, CanSufferDamage, EntityName, Mob, MobBundle, Position, Viewshed,
+};
 
 use self::item_structs::Consumable;
 pub use self::manager::RAW_MANAGER;
 
 /// The `/static` directory.
-pub static STATIC: Dir = include_dir!("../../static");
+pub static STATIC: Dir = include_dir!("$CARGO_MANIFEST_DIR/../../static");
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Raws {

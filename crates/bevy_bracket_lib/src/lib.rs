@@ -15,7 +15,7 @@ impl BracketLibPlugin {
 }
 
 impl Plugin for BracketLibPlugin {
-    fn build(&self, app: &mut bevy_app::AppBuilder) {
+    fn build(&self, app: &mut bevy_app::App) {
         let bterm = self.bterm.clone();
         app.insert_resource(bterm.clone())
             .set_runner(move |app| bracket_lib_runner(app, bterm.clone()));

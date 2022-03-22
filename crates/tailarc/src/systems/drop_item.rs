@@ -11,7 +11,7 @@ pub fn drop_item_system(
     items: Query<(Entity, &EntityName, &Owned), With<Item>>,
     player: Query<Entity, With<Player>>,
 ) {
-    let player_entity = player.single().unwrap();
+    let player_entity = player.single();
 
     for (entity, wants_drop, pos) in wants_drop.iter_mut() {
         let (item, name, owned) = items

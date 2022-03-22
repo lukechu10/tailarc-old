@@ -8,13 +8,13 @@ pub fn monster_ai_system(
     mut commands: Commands,
     mut map: ResMut<Map>,
     mut set: QuerySet<(
-        Query<(Entity, &Position), With<Player>>,
-        Query<(Entity, &mut Viewshed, &mut Position, &EntityName), With<Mob>>,
+        QueryState<(Entity, &Position), With<Player>>,
+        QueryState<(Entity, &mut Viewshed, &mut Position, &EntityName), With<Mob>>,
     )>,
 ) {
-    let (player_entity, &player_pos) = set.q0().single().unwrap();
+    let (player_entity, &player_pos) = set.q0().single();
 
-    for (entity, mut viewshed, mut pos, _name) in set.q1_mut().iter_mut() {
+    for (entity, mut viewshed, mut pos, _name) in set.q1().iter_mut() {
         if viewshed.visible_tiles.contains(&player_pos) {
             let distance = DistanceAlg::Pythagoras.distance2d(
                 Point::new(pos.x, pos.y),

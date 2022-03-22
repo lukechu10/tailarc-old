@@ -39,7 +39,7 @@ pub fn delete_the_dead(
         if stats.hp <= 0 {
             if player.is_some() {
                 // Player died.
-                game_log.add_entry("You died! :(".to_string());
+                game_log.add_entry("You died! :(");
                 state.overwrite_replace(RunState::MainMenu).unwrap();
             } else {
                 // A monster died.

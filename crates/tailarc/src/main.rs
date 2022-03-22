@@ -175,8 +175,8 @@ fn main() {
     // Load the raws.
     raws::load_spawns();
 
-    bevy_app::App::build()
-        .add_plugin(CorePlugin::default())
+    bevy_app::App::new()
+        .add_plugin(CorePlugin)
         .add_stage_after(
             CoreStage::Update,
             AppStages::MonsterTurn,
@@ -205,7 +205,7 @@ fn main() {
         .add_system_set_to_stage(AppStages::CleanupAndRender, State::<RunState>::get_driver())
         .add_plugin(BracketLibPlugin::new(bterm))
         // Initialization logic
-        .add_startup_system(init.system())
+        .add_startup_system(init)
         // Game saving systems.
         .add_system_set(
             SystemSet::on_update(RunState::SaveGame)
@@ -213,35 +213,32 @@ fn main() {
         )
         // Handle input first. Input is what triggers the game to update.
         .add_system_set(
-            SystemSet::on_update(RunState::AwaitingInput).with_system(
-                systems::input::player_input_system
-                    .system()
-                    .label(UpdateLabel::Input),
-            ),
+            SystemSet::on_update(RunState::AwaitingInput)
+                .with_system(systems::input::player_input_system.label(UpdateLabel::Input)),
         )
         // Handle player actions.
         .add_system_set(
             SystemSet::on_update(RunState::Player)
-                .with_system(systems::use_item::use_item_system.system())
-                .with_system(systems::drop_item::drop_item_system.system()),
+                .with_system(systems::use_item::use_item_system)
+                .with_system(systems::drop_item::drop_item_system),
         )
         // Run indexing systems after input to ensure that state is in sync.
         // These don't need to be in a separate stage from CoreStage::Update because input doesn't
         // spawn new entities/components.
         .add_system_set(
             SystemSet::new()
-                .with_run_criteria(run_if_in_game.system())
+                .with_run_criteria(run_if_in_game)
                 .label(UpdateLabel::Indexing)
                 .after(UpdateLabel::Input)
-                .with_system(systems::visibility::visibility_system.system())
-                .with_system(systems::map_indexing::map_indexing_system.system()),
+                .with_system(systems::visibility::visibility_system)
+                .with_system(systems::map_indexing::map_indexing_system),
         )
         // Run monster AI systems after indexing to ensure that they are operating on consistent
         // state.
         .add_system_set_to_stage(
             AppStages::MonsterTurn,
             SystemSet::on_update(RunState::Monster)
-                .with_system(systems::monster_ai::monster_ai_system.system()),
+                .with_system(systems::monster_ai::monster_ai_system),
         )
         // Run combat system to attach damage to victims.
         //
@@ -249,8 +246,8 @@ fn main() {
         .add_system_set_to_stage(
             AppStages::ApplyCombat,
             SystemSet::new()
-                .with_run_criteria(run_if_in_game.system())
-                .with_system(systems::melee_combat::melee_combat_system.system()),
+                .with_run_criteria(run_if_in_game)
+                .with_system(systems::melee_combat::melee_combat_system),
         )
         // Run damage system to apply damage from combat.
         //
@@ -258,34 +255,32 @@ fn main() {
         // stats.
         .add_system_set_to_stage(
             AppStages::ApplyDamage,
-            SystemSet::new().with_system(systems::damage::damage_system.system()),
+            SystemSet::new().with_system(systems::damage::damage_system),
         )
         // Rendering runs on the cleanup stage after everything else.
         // Render the game.
         .add_system_set_to_stage(
             AppStages::CleanupAndRender,
             SystemSet::new()
-                .with_run_criteria(run_if_in_game.system())
-                .with_system(render::render_game_system.system().label(RenderLabel::Map))
+                .with_run_criteria(run_if_in_game)
+                .with_system(render::render_game_system.label(RenderLabel::Map))
                 .with_system(
                     gui::render_ui_system
-                        .system()
                         .label(RenderLabel::UiAndParticles)
                         .after(RenderLabel::Map),
                 )
                 // We can run these systems in parallel with rendering because they perform cleanup
                 // code for the tick. Commands are queued until next stage so render will
                 // still be consistent.
-                .with_system(systems::inventory::item_collection_system.system())
-                .with_system(systems::damage::delete_the_dead.system())
-                .with_system(systems::particle::spawn_particles_system.system())
-                .with_system(systems::particle::cull_particles_system.system()),
+                .with_system(systems::inventory::item_collection_system)
+                .with_system(systems::damage::delete_the_dead)
+                .with_system(systems::particle::spawn_particles_system)
+                .with_system(systems::particle::cull_particles_system),
         )
         .add_system_set_to_stage(
             AppStages::CleanupAndRender,
             SystemSet::on_update(RunState::ShowInventory).with_system(
                 gui::render_inventory
-                    .system()
                     .label(RenderLabel::UiAndParticles)
                     .after(RenderLabel::Map),
             ),
@@ -294,18 +289,16 @@ fn main() {
             AppStages::CleanupAndRender,
             SystemSet::on_update(RunState::ShowDropItem).with_system(
                 gui::render_drop_item_menu
-                    .system()
                     .label(RenderLabel::UiAndParticles)
                     .after(RenderLabel::Map),
             ),
         )
         .add_system_set_to_stage(
             AppStages::CleanupAndRender,
-            SystemSet::on_update(RunState::MainMenu)
-                .with_system(render::render_main_menu_system.system()),
+            SystemSet::on_update(RunState::MainMenu).with_system(render::render_main_menu_system),
         )
         // Next turn always runs.
-        .add_system_to_stage(AppStages::CleanupAndRender, next_turn_state_system.system())
+        .add_system_to_stage(AppStages::CleanupAndRender, next_turn_state_system)
         .run();
 }
 

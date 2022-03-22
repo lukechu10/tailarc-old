@@ -36,7 +36,7 @@ pub fn render_ui_system(
     );
 
     // Draw player health.
-    let stats = player.single().unwrap();
+    let stats = player.single();
 
     let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
     ctx.print_color(
@@ -81,7 +81,7 @@ pub fn render_inventory(
     player: Query<Entity, With<Player>>,
     items: Query<(Entity, &EntityName, &Owned), With<Item>>,
 ) {
-    let player_entity = player.single().unwrap();
+    let player_entity = player.single();
 
     let inventory: Vec<_> = items
         .iter()
@@ -162,7 +162,7 @@ pub fn render_drop_item_menu(
     player: Query<Entity, With<Player>>,
     items: Query<(Entity, &EntityName, &Owned), With<Item>>,
 ) {
-    let player_entity = player.single().unwrap();
+    let player_entity = player.single();
 
     let inventory: Vec<_> = items
         .iter()

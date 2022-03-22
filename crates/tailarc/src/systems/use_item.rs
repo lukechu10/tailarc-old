@@ -17,7 +17,7 @@ pub fn use_item_system(
     equipped: Query<(Entity, &Equipped, &EntityName)>,
     player: Query<Entity, With<Player>>,
 ) {
-    let player_entity = player.single().unwrap();
+    let player_entity = player.single();
 
     for (entity, wants_use, stats) in wants_use.iter_mut() {
         let owned = owned

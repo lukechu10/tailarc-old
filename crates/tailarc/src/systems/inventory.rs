@@ -37,7 +37,7 @@ pub fn item_collection_system(
     wants_pickup: Query<(Entity, &WantsToPickupItem)>,
     item_names: Query<&EntityName, With<Item>>,
 ) {
-    let player_entity = player.single().unwrap();
+    let player_entity = player.single();
 
     // Collect items.
     for (owner, wants_pickup) in wants_pickup.iter() {

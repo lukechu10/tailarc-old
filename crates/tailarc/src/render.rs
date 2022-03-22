@@ -73,7 +73,7 @@ pub fn render_game_system(
     let console_width_for_map = CONSOLE_WIDTH;
     let console_height_for_map = CONSOLE_HEIGHT - 6;
 
-    let player_pos = player.single().unwrap();
+    let player_pos = player.single();
     let player_screen_pos = (console_width_for_map / 2, console_height_for_map / 2);
 
     for (((tile, &revealed), &visible), contents) in map

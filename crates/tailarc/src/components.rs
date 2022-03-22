@@ -43,7 +43,7 @@ pub fn register_component_types(type_registry: &mut TypeRegistry) {
 }
 
 /// A component that gives an entity a position.
-#[derive(Debug, Reflect, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Reflect, Component, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[reflect_value(Component, Serialize)]
 pub struct Position {
     pub x: u32,
@@ -51,18 +51,18 @@ pub struct Position {
 }
 
 /// A component that gives an entity a name.
-#[derive(Debug, Reflect, Default)]
+#[derive(Debug, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct EntityName {
     pub name: String,
 }
 
 /// A component that makes an entity block a tile (so that other entities can't pass through it).
-#[derive(Debug, Reflect, Default)]
+#[derive(Debug, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct BlocksTile;
 
-#[derive(Debug, Reflect, Default, Deserialize, Clone, Copy)]
+#[derive(Debug, Reflect, Component, Default, Deserialize, Clone, Copy)]
 #[reflect(Component)]
 pub struct CombatStats {
     pub hp: i32,
@@ -72,7 +72,7 @@ pub struct CombatStats {
 }
 
 /// A component that contains the data needed to render a tile.
-#[derive(Debug, Reflect, Default, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Reflect, Component, Default, Serialize, Deserialize, Clone, Copy)]
 #[reflect_value(Component, Serialize)]
 pub struct Renderable {
     #[serde(deserialize_with = "crate::deserialize::u16_from_cp437")]
@@ -94,7 +94,7 @@ pub struct Renderable {
 }
 
 /// A component that adds field of view to an entity.
-#[derive(Debug, Reflect, Default)]
+#[derive(Debug, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Viewshed {
     pub visible_tiles: bevy_utils::HashSet<Position>,
@@ -113,7 +113,7 @@ impl Viewshed {
 }
 
 /// Player entity.
-#[derive(Debug, Reflect, Default)]
+#[derive(Debug, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Player;
 
@@ -129,7 +129,7 @@ pub struct PlayerBundle {
 }
 
 /// Mob entity.
-#[derive(Debug, Reflect, Default)]
+#[derive(Debug, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Mob;
 
@@ -152,20 +152,20 @@ pub struct MobBundle {
 /// [`melee_combat_system`](crate::systems::melee_combat::melee_combat_system).
 ///
 /// Not reflected as component.
-#[derive(Debug, Reflect)]
+#[derive(Debug, Reflect, Component)]
 pub struct WantsToMelee {
     pub target: Entity,
 }
 
 /// A component that indicates that an entity can be attacked. This component should always be
 /// attached to the entity, even when it is not being attacked.
-#[derive(Debug, Reflect, Default)]
+#[derive(Debug, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct CanSufferDamage {
     pub amount: Vec<i32>,
 }
 
-#[derive(Debug, Reflect, Default)]
+#[derive(Debug, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct ParticleLifetime {
     pub timer: Timer,
@@ -179,19 +179,19 @@ pub struct ParticleBundle {
 }
 
 /// Item entity.
-#[derive(Debug, Reflect, Default)]
+#[derive(Debug, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Item;
 
 /// Indicates intent to pickup an item.
 // Not reflected as component.
-#[derive(Debug, Reflect)]
+#[derive(Debug, Reflect, Component)]
 pub struct WantsToPickupItem {
     pub item: Entity,
 }
 
 /// An entity that is owned by another entity (e.g. an item that is in the player's backpack).
-#[derive(Debug, Reflect)]
+#[derive(Debug, Reflect, Component)]
 #[reflect(Component)]
 pub struct Owned {
     pub owner: Entity,
@@ -201,33 +201,33 @@ pub struct Owned {
 impl FromWorld for Owned {
     fn from_world(_world: &mut World) -> Self {
         Self {
-            owner: Entity::new(u32::MAX),
+            owner: Entity::from_raw(u32::MAX),
         }
     }
 }
 
 /// An item that has an effect when consumed.
-#[derive(Debug, Reflect, Default, Deserialize, Clone, Copy)]
+#[derive(Debug, Reflect, Component, Default, Deserialize, Clone, Copy)]
 #[reflect(Component)]
 pub struct ConsumableEffects {
     pub heal: Option<i32>,
 }
 
 /// Not reflected as component.
-#[derive(Debug, Reflect)]
+#[derive(Debug, Reflect, Component)]
 pub struct WantsToUseItem {
     /// `item` must have an [`Item`] component.
     pub item: Entity,
 }
 
 /// Not reflected as component.
-#[derive(Debug, Reflect)]
+#[derive(Debug, Reflect, Component)]
 pub struct WantsToDropItem {
     /// `item` must have an [`Item`] component.
     pub item: Entity,
 }
 
-#[derive(Debug, Reflect, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Reflect, Component, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 #[reflect_value(Serialize)]
 pub enum EquipmentSlot {
@@ -235,7 +235,7 @@ pub enum EquipmentSlot {
     Shield,
 }
 
-#[derive(Debug, Reflect, Deserialize, Clone, Copy)]
+#[derive(Debug, Reflect, Component, Deserialize, Clone, Copy)]
 #[reflect(Component)]
 pub struct Equippable {
     pub slot: EquipmentSlot,
@@ -250,7 +250,7 @@ impl FromWorld for Equippable {
     }
 }
 
-#[derive(Debug, Reflect)]
+#[derive(Debug, Reflect, Component)]
 #[reflect(Component)]
 pub struct Equipped {
     pub by: Entity,
@@ -262,13 +262,13 @@ pub struct Equipped {
 impl FromWorld for Equipped {
     fn from_world(_world: &mut World) -> Self {
         Self {
-            by: Entity::new(u32::MAX),
+            by: Entity::from_raw(u32::MAX),
             slot: EquipmentSlot::Melee,
         }
     }
 }
 
-#[derive(Debug, Reflect, Default, Deserialize, Clone, Copy)]
+#[derive(Debug, Reflect, Component, Default, Deserialize, Clone, Copy)]
 #[reflect(Component)]
 pub struct ItemStats {
     #[serde(default)]

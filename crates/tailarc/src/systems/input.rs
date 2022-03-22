@@ -21,7 +21,7 @@ pub fn player_input_system(
     enemies: Query<(Entity, &CombatStats), With<Mob>>,
     items: Query<(Entity, &Item)>,
 ) {
-    let (player_entity, mut player_pos, mut viewshed, _combat_stats) = player.single_mut().unwrap();
+    let (player_entity, mut player_pos, mut viewshed, _combat_stats) = player.single_mut();
 
     // Pickup item.
     if bterm.key == Some(VirtualKeyCode::Comma) {
